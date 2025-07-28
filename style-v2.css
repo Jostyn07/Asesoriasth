@@ -260,10 +260,10 @@ h2.main-title {
 }
 
 .tab-content {
+    display: none; /* Oculto por defecto */
     padding-top: 20px; 
     border-top: 2px solid #007bff; 
     margin-top: -2px;
-    display: none; /* Oculto por defecto */
 }
 .tab-content.active {
     display: block; 
