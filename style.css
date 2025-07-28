@@ -264,7 +264,6 @@ h2.main-title {
     border-top: 2px solid #007bff; 
     margin-top: -2px;
     display: none; /* Oculto por defecto */
-    animation: fadeIn 0.3s; /* Animación de entrada */
 }
 .tab-content.active {
     display: block; 
