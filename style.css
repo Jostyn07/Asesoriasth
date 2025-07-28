@@ -262,9 +262,16 @@ h2.main-title {
 .tab-content {
     padding-top: 20px; 
     border-top: 2px solid #007bff; 
+    margin-top: -2px;
+    display: none; /* Oculto por defecto */
+    animation: fadeIn 0.3s; /* Animación de entrada */
+}
+.tab-content.active {
+    display: block; 
+    padding-top: 20px; 
+    border-top: 2px solid #007bff; 
     margin-top: -2px; 
 }
-
 
 /* Estilos del Modal (CORRECCIÓN CLAVE AQUÍ) */
 .modal {
