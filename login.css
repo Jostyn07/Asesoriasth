@@ -1,0 +1,148 @@
+.html, body {
+    background-image: url('Imagenes/Fondo-login.png');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+}
+/* Estilos para el contenedor del formulario de inicio de sesión */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: left;
+    background-color: rgba(50, 156, 243, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    width: 30%;
+    height: 80%;
+    margin-top: 70px;
+    margin-left: 80px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+/* Estilos para el cuerpo del formulario de inicio de sesión */
+.login-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+/* Estilos para el título del formulario de inicio de sesión */
+.login-title {
+    width: auto;
+    height: auto;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    font-weight: 700;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    background: linear-gradient(45deg, #4285F4, #34A853);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    background-clip: text;
+    position: relative;
+    animation: shimmer 3s ease-in-out infinite;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    letter-spacing: 1px;
+}
+
+.login-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4285F4, #34A853);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Efecto de linea sobre el título */
+.login-title:hover::after {
+    width: 100%;
+}
+
+/* Animación de brillo para el título */
+@keyframes shimmer {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+.login-logo {
+    width: 200px;
+    height: auto;
+    margin-bottom: 30px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)) brightness(11.1rem);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.login-logo::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: linear-gradient(45deg, rgba(66, 133, 244, 0.3), rgba(52, 168, 83, 0.3));
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.login-logo:hover::before {
+    opacity: 1;
+}
+
+
+.login-logo:hover {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4)) brightness(1.2);
+}
+
+/* Estilo para el botón de Google */
+.login-button-section {
+    margin-top: 20px;
+    flex-shrink: 0;
+}
+
+.btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+    padding: 15px 25px;
+    background: linear-gradient(45deg, #4285F4, #34A853);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(66, 133, 244, 0.4);
+    position: relative;
+    overflow: hidden;
+    min-height: 50px;
+}
+
+.btn-google:hover {
+    box-shadow: 0 6px 20px rgba(66, 133, 244, 0.6);
+    transform: translateY(-2px);
+}
+
+.google-signin-button {
+    width: 24px;
+    height: 24px;
+}
