@@ -1,3 +1,4 @@
+// formulario.js
 // ======================== Configuración Google APIs ========================
 const clientId = "64713983477-nk4rmn95cgjsnab4gmp44dpjsdp1brk2.apps.googleusercontent.com";
 const SPREADSHEET_ID = "1T8YifEIUU7a6ugf_Xn5_1edUUMoYfM9loDuOQU1u2-8";
@@ -77,7 +78,6 @@ function showStatus(msg, type = "info") {
   if (type !== "error") setTimeout(() => (box.style.display = "none"), 4500);
 }
 
-// Convertir formato de fecha de MM/DD/AAAA a ISO YYYY-MM-DD
 function usToIso(us) {
   if (!us) return "";
   const [m, d, y] = us.split("/");
@@ -251,6 +251,7 @@ function addDependentField(existingData = null) {
   `;
   container.appendChild(card);
   setupDependentValidation(card);
+  attachDateInputMask(card.querySelector('.dependent-fecha'));
   updateDependentNumbers();
   updateDependentsCount();
 }
@@ -312,29 +313,29 @@ function ensureDependentsCards(n) {
 
 // ================================ PO Box ==================================
 function initPOBox() {
-    const chk = $("#poBoxcheck");
-    const poBoxInput = $("#poBox");
-    const addressInputs = $all('#direccion, #casaApartamento, #condado, #Ciudad, #codigoPostal');
-    
-    if (!chk || !poBoxInput) return;
-    
-    const toggle = () => {
-        const isChecked = chk.checked;
-        poBoxInput.disabled = !isChecked;
-        poBoxInput.required = isChecked;
+  const chk = $("#poBoxcheck");
+  const poBoxInput = $("#poBox");
+  const addressInputs = $all('#direccion, #casaApartamento, #condado, #Ciudad, #codigoPostal');
+  
+  if (!chk || !poBoxInput) return;
+  
+  const toggle = () => {
+      const isChecked = chk.checked;
+      poBoxInput.disabled = !isChecked;
+      poBoxInput.required = isChecked;
 
-        addressInputs.forEach(el => {
-            el.disabled = isChecked;
-            el.required = !isChecked;
-            if(isChecked) el.value = '';
-        });
-    };
-    
-    chk.addEventListener("change", toggle);
-    toggle();
+      addressInputs.forEach(el => {
+          el.disabled = isChecked;
+          el.required = !isChecked;
+          if(isChecked) el.value = '';
+      });
+  };
+  
+  chk.addEventListener("change", toggle);
+  toggle();
 }
 
-// ================================ Pagos ===================================
+// ================================ Pagos ==================================
 function initPayment() {
   const rbBanco = $("#pagoBanco");
   const rbTarjeta = $("#pagoTarjeta");
@@ -365,7 +366,8 @@ function attachSSNFormatting() {
 }
 
 function attachCurrencyFormatting() {
-  ["#ingresos", "#prima", "#creditoFiscal", "#cignaDeducible", "#cignaPrima", "#beneficioDiario"].forEach((sel) => {
+  const fields = ["#ingresos", "#prima", "#creditoFiscal", "#cignaDeducible", "#cignaPrima", "#beneficioDiario"];
+  fields.forEach((sel) => {
     const el = $(sel);
     if (!el) return;
     el.addEventListener("input", (e) => {
@@ -389,8 +391,7 @@ function attachCurrencyFormatting() {
 }
 
 // Lógica de máscara de fecha para el formato mm/dd/aaaa
-function attachDateInputMask(selector) {
-  const el = $(selector);
+function attachDateInputMask(el) {
   if (!el) return;
   el.addEventListener('input', function(e) {
       let value = e.target.value.replace(/\D/g, '');
@@ -599,433 +600,223 @@ function initCignaPlans() {
       </div>
     `;
     container.appendChild(card);
-
     const tipoSel = card.querySelector(".cigna-tipo");
     const hosp = card.querySelector(".hospitalario-only");
     const acc = card.querySelector(".accidente-only");
     const onTipoChange = () => {
-      const v = tipoSel.value;
-      hosp.style.display = v === "Hospitalario" ? "" : "none";
-      acc.style.display = v === "Accidente" ? "" : "none";
+        const v = tipoSel.value;
+        hosp.style.display = v === "Hospitalario" ? "" : "none";
+        acc.style.display = v === "Accidente" ? "" : "none";
     };
     tipoSel.addEventListener("change", onTipoChange);
     attachCurrencyFormatting();
-    attachDateInputMask(`#beneficiarioFechaNacimiento_${i}`);
-
+    attachDateInputMask(card.querySelector(`#beneficiarioFechaNacimiento_${i}`));
     card.querySelector(".cigna-remove").addEventListener("click", () => {
-      card.remove();
-      [...container.querySelectorAll(".cigna-plan-card")].forEach((el, idx2) => {
-        const h2 = el.querySelector(".card-header h2");
-        if (h2) h2.textContent = `Plan Cigna ${idx2 + 1}`;
-      });
+        card.remove();
+        [...container.querySelectorAll(".cigna-plan-card")].forEach((el, idx2) => {
+            const h2 = el.querySelector(".card-header h2");
+            if (h2) h2.textContent = `Plan Cigna ${idx2 + 1}`;
+        });
     });
+    const currencyFields = card.querySelectorAll("input[type='text'][id^='cignaBeneficio_'], input[type='text'][id^='cignaDeducible_'], input[type='text'][id^='cignaPrima_'], input[type='text'][id^='beneficioDiario_']");
+    currencyFields.forEach(field => attachCurrencyFormatting(field));
   });
 }
 
 function collectAllCignaPlansWithDynamicFields() {
-  const plans = [];
-  const cards = document.querySelectorAll(".cigna-plan-card");
-  cards.forEach((card, index) => {
-    const plan = {
-      tipo: card.querySelector(`.cigna-tipo`)?.value || "",
-      coberturaTipo: card.querySelector(`#cignaCoberturaTipo_${index}`)?.value || "",
-      beneficio: card.querySelector(`#cignaBeneficio_${index}`)?.value || "",
-      deducible: card.querySelector(`#cignaDeducible_${index}`)?.value || "",
-      prima: card.querySelector(`#cignaPrima_${index}`)?.value || "",
-      comentarios: card.querySelector(`#cignaComentarios_${index}`)?.value || "",
-      beneficioDiario: card.querySelector(`#beneficioDiario_${index}`)?.value || "",
-      beneficiarioNombre: card.querySelector(`#beneficiarioNombre_${index}`)?.value || "",
-      beneficiarioFechaNacimiento: card.querySelector(`#beneficiarioFechaNacimiento_${index}`)?.value || "",
-      beneficiarioDireccion: card.querySelector(`#beneficiarioDireccion_${index}`)?.value || "",
-      beneficiarioRelacion: card.querySelector(`#beneficiarioRelacion_${index}`)?.value || "",
-    };
-    if (plan.tipo) plans.push(plan);
-  });
-  return plans;
+    const plans = [];
+    const cards = document.querySelectorAll(".cigna-plan-card");
+    cards.forEach((card, index) => {
+        const plan = {
+            tipo: card.querySelector(`.cigna-tipo`)?.value || "",
+            coberturaTipo: card.querySelector(`#cignaCoberturaTipo_${index}`)?.value || "",
+            beneficio: card.querySelector(`#cignaBeneficio_${index}`)?.value || "",
+            deducible: card.querySelector(`#cignaDeducible_${index}`)?.value || "",
+            prima: card.querySelector(`#cignaPrima_${index}`)?.value || "",
+            comentarios: card.querySelector(`#cignaComentarios_${index}`)?.value || "",
+            beneficioDiario: card.querySelector(`#beneficioDiario_${index}`)?.value || "",
+            beneficiarioNombre: card.querySelector(`#beneficiarioNombre_${index}`)?.value || "",
+            beneficiarioFechaNacimiento: card.querySelector(`#beneficiarioFechaNacimiento_${index}`)?.value || "",
+            beneficiarioDireccion: card.querySelector(`#beneficiarioDireccion_${index}`)?.value || "",
+            beneficiarioRelacion: card.querySelector(`#beneficiarioRelacion_${index}`)?.value || "",
+        };
+        if (plan.tipo) plans.push(plan);
+    });
+    return plans;
 }
 
-// ============================ Recolección general =========================
 function collectData() {
-  const data = {
-    nombre: $("#Nombre")?.value?.trim() || "",
-    apellidos: $("#Apellidos")?.value?.trim() || "",
-    sexo: $("#sexo")?.value || "",
-    correo: $("#correo")?.value?.trim() || "",
-    telefono: $("#telefono")?.value?.trim() || "",
-    fechaNacimiento: $("#fechaNacimiento")?.value || "",
-    estadoMigratorio: $("#estadoMigratorio")?.value || "",
-    ssn: $("#SSN")?.value || "",
-    ingresos: $("#ingresos")?.value || "",
-    aplica: $("#aplica")?.value || "",
-    cantidadDependientes: $("#cantidadDependientes")?.value || "0",
-    direccion: $("#direccion")?.value?.trim() || "",
-    casaApartamento: $("#casaApartamento")?.value?.trim() || "",
-    condado: $("#condado")?.value?.trim() || "",
-    ciudad: $("#Ciudad")?.value?.trim() || "",
-    codigoPostal: $("#codigoPostal")?.value?.trim() || "",
-    poBox: $("#poBoxcheck")?.checked ? $("#poBox")?.value?.trim() || "" : "",
-    compania: $("#compania")?.value || "",
-    plan: $("#plan")?.value?.trim() || "",
-    creditoFiscal: $("#creditoFiscal")?.value || "",
-    prima: $("#prima")?.value || "",
-    link: $("#link")?.value?.trim() || "",
-    tipoVenta: $("#tipoVenta")?.value || "",
-    operador: $("#operador")?.value || "",
-    claveSeguridad: $("#claveSeguridad")?.value?.trim() || "",
-    observaciones: $("#observaciones")?.value?.trim() || "",
-    metodoPago: $("#pagoBanco")?.checked ? "banco" : $("#pagoTarjeta")?.checked ? "tarjeta" : "",
-    pagoBanco: {
-      numCuenta: $("#numCuenta")?.value?.trim() || "",
-      numRuta: $("#numRuta")?.value?.trim() || "",
-      nombreBanco: $("#nombreBanco")?.value?.trim() || "",
-      titularCuenta: $("#titularCuenta")?.value?.trim() || "",
-      socialCuenta: $("#socialCuenta")?.value || "",
-    },
-    pagoTarjeta: {
-      numTarjeta: $("#numTarjeta")?.value?.trim() || "",
-      fechaVencimiento: $("#fechaVencimiento")?.value?.trim() || "",
-      cvc: $("#cvc")?.value?.trim() || "",
-      titularTarjeta: $("#titularTarjeta")?.value?.trim() || "",
-    },
-  };
-  return data;
+    const data = {
+        nombre: $("#Nombre")?.value?.trim() || "",
+        apellidos: $("#Apellidos")?.value?.trim() || "",
+        sexo: $("#sexo")?.value || "",
+        correo: $("#correo")?.value?.trim() || "",
+        telefono: $("#telefono")?.value?.trim() || "",
+        fechaNacimiento: $("#fechaNacimiento")?.value || "",
+        estadoMigratorio: $("#estadoMigratorio")?.value || "",
+        ssn: $("#SSN")?.value || "",
+        ingresos: $("#ingresos")?.value || "",
+        aplica: $("#aplica")?.value || "",
+        cantidadDependientes: $("#cantidadDependientes")?.value || "0",
+        direccion: $("#direccion")?.value?.trim() || "",
+        casaApartamento: $("#casaApartamento")?.value?.trim() || "",
+        condado: $("#condado")?.value?.trim() || "",
+        ciudad: $("#Ciudad")?.value?.trim() || "",
+        codigoPostal: $("#codigoPostal")?.value?.trim() || "",
+        poBox: $("#poBoxcheck")?.checked ? $("#poBox")?.value?.trim() || "" : "",
+        compania: $("#compania")?.value || "",
+        plan: $("#plan")?.value?.trim() || "",
+        creditoFiscal: $("#creditoFiscal")?.value || "",
+        prima: $("#prima")?.value || "",
+        link: $("#link")?.value?.trim() || "",
+        tipoVenta: $("#tipoVenta")?.value || "",
+        operador: $("#operador")?.value || "",
+        claveSeguridad: $("#claveSeguridad")?.value?.trim() || "",
+        observaciones: $("#observaciones")?.value?.trim() || "",
+        metodoPago: $("#pagoBanco")?.checked ? "banco" : $("#pagoTarjeta")?.checked ? "tarjeta" : "",
+        pagoBanco: {
+            numCuenta: $("#numCuenta")?.value?.trim() || "",
+            numRuta: $("#numRuta")?.value?.trim() || "",
+            nombreBanco: $("#nombreBanco")?.value?.trim() || "",
+            titularCuenta: $("#titularCuenta")?.value?.trim() || "",
+            socialCuenta: $("#socialCuenta")?.value || "",
+        },
+        pagoTarjeta: {
+            numTarjeta: $("#numTarjeta")?.value?.trim() || "",
+            fechaVencimiento: $("#fechaVencimiento")?.value?.trim() || "",
+            cvc: $("#cvc")?.value?.trim() || "",
+            titularTarjeta: $("#titularTarjeta")?.value?.trim() || "",
+        },
+    };
+    return data;
 }
 
-// =================================== API ===================================
 const BACKEND_URL = "https://asesoriasth-backend.onrender.com/api";
 
-async function sendFormDataToSheets(data) {
-  if (!ensureAuthenticated({
-      interactive: true
-    })) {
-    throw new Error("No estás autenticado. Por favor, inicia sesión de nuevo.");
-  }
-
-  const accessToken = localStorage.getItem("google_access_token");
-  if (!accessToken) {
-    throw new Error("Token de acceso no disponible. Inicia sesión.");
-  }
-  
-  const clientId = `CLI-${Date.now()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
-
-  const obamacareData = [
-    data.operador,
-    new Date().toLocaleDateString('es-ES'),
-    data.tipoVenta,
-    data.claveSeguridad,
-    'Titular',
-    data.nombre,
-    data.apellidos,
-    data.sexo,
-    data.correo,
-    data.telefono,
-    data.fechaNacimiento,
-    data.estadoMigratorio,
-    data.ssn,
-    data.ingresos,
-    data.aplica,
-    data.cantidadDependientes,
-    data.poBox || (data.direccion + (data.casaApartamento ? ', ' + data.casaApartamento : '') + ', ' + data.condado + ', ' + data.ciudad + ', ' + data.codigoPostal),
-    data.compania,
-    data.plan,
-    data.creditoFiscal,
-    data.prima,
-    data.link,
-    data.observaciones,
-    clientId,
-  ];
-
-  const obamacareUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME_OBAMACARE}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-  await fetch(obamacareUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        values: [obamacareData]
-      }),
-    })
-    .then((res) => {
-      if (!res.ok) throw new Error("Error al guardar datos de Obamacare.");
-      return res.json();
-    });
-  
-  if (data.dependents && data.dependents.length > 0) {
-    const dependentsRows = data.dependents.map(dep => [
-        data.operador || '', 
-        new Date().toLocaleDateString('es-ES'),
-        data.tipoVenta || '',
-        data.claveSeguridad || '',
-        dep.parentesco || '',
-        dep.nombre || '',
-        dep.apellido || '',
-        '',
-        '',
-        '',
-        dep.fechaNacimiento || '',
-        '',
-        dep.ssn || '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        clientId,
-        ''
-    ]);
-    const dependentsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME_OBAMACARE}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-    await fetch(dependentsUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ values: dependentsRows })
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Error al guardar los dependientes en la hoja.");
-      return res.json();
-    });
-  }
-
-  if (data.cignaPlans && data.cignaPlans.length > 0) {
-    const cignaValues = data.cignaPlans.map((p) => [
-        clientId,
-        new Date().toLocaleDateString('es-ES'),
-        p.parentesco || '',
-        `${data.nombre} ${data.apellidos}`,
-        data.telefono || '',
-        data.sexo || '',
-        p.fechaNacimiento || '',
-        data.poBox || (data.direccion + (data.casaApartamento ? ', ' + data.casaApartamento : '') + ', ' + data.condado + ', ' + data.ciudad + ', ' + data.codigoPostal),
-        data.correo || '',
-        data.estadoMigratorio || '',
-        data.ssn || '',
-        `${p.beneficiarioNombre || ''} / ${p.beneficiarioFechaNacimiento || ''} / ${p.beneficiarioDireccion || ''} / ${p.beneficiarioRelacion || ''}`,
-        p.tipo,
-        p.coberturaTipo,
-        p.beneficio,
-        p.beneficioDiario,
-        p.deducible,
-        p.prima,
-        p.comentarios,
-    ]);
-
-    const cignaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME_CIGNA}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-    await fetch(cignaUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          values: cignaValues
-        }),
-      })
-      .then((res) => {
-        if (!res.ok) throw new Error("Error al guardar datos de Cigna.");
-        return res.json();
-      });
-  }
-
-  if (data.metodoPago) {
-    let pagoData = [
-        clientId,
-        `${data.nombre} ${data.apellidos}`,
-        data.telefono,
-        data.metodoPago,
-    ];
-    if (data.metodoPago === "banco") {
-        pagoData = pagoData.concat([
-            data.pagoBanco.numCuenta,
-            data.pagoBanco.numRuta,
-            data.pagoBanco.nombreBanco,
-            data.pagoBanco.titularCuenta,
-            data.pagoBanco.socialCuenta,
-            data.observaciones,
-        ]);
-    } else if (data.metodoPago === "tarjeta") {
-        pagoData = pagoData.concat([
-            data.pagoTarjeta.numTarjeta,
-            data.pagoTarjeta.fechaVencimiento,
-            data.pagoTarjeta.titularTarjeta,
-            data.pagoTarjeta.cvc,
-            data.observaciones,
-        ]);
-    }
-
-    const pagosUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME_PAGOS}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-    await fetch(pagosUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          values: [pagoData]
-        }),
-      })
-      .then((res) => {
-        if (!res.ok) throw new Error("Error al guardar datos de pagos.");
-        return res.json();
-      });
-  }
-
-  return clientId;
-}
-
-async function uploadFilesToBackend(files, nombre, apellidos, clientId) {
-  if (files.length === 0) return;
-
-  showStatus("Subiendo archivos...", "info");
-  const formData = new FormData();
-  formData.append("nombre", nombre);
-  formData.append("apellidos", apellidos);
-  formData.append("clientId", clientId);
-  files.forEach(fileData => {
-    formData.append("files", fileData.file, fileData.name);
-  });
-  
-  const response = await fetch(`${BACKEND_URL}/upload-files`, {
-    method: "POST",
-    body: formData
-  });
-
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.error || "Error desconocido al subir archivos.");
-  }
-  showStatus("✅ Archivos subidos a Drive correctamente.", "success");
-}
-
 async function onSubmit(e) {
-  e.preventDefault();
-  
-  const data = collectData();
-  data.cignaPlans = collectAllCignaPlansWithDynamicFields();
-  data.dependents = window.currentDependentsData;
-
-  const fileInputs = document.querySelectorAll("#customUploadContainer .upload-input");
-  const filesToUpload = [];
-  fileInputs.forEach(input => {
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      const driveFileName = input.closest(".upload-field").querySelector(".archivo-nombre").value;
-      filesToUpload.push({ file: file, name: driveFileName || file.name });
+    e.preventDefault();
+    const submitBtn = $("#submitBtn");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando...";
+    const data = collectData();
+    data.cignaPlans = collectAllCignaPlansWithDynamicFields();
+    data.dependents = window.currentDependentsData;
+    const filesToUpload = Array.from(document.querySelectorAll("#customUploadContainer .upload-input"))
+        .filter(input => input.files && input.files.length > 0)
+        .map(input => {
+            const file = input.files[0];
+            const driveFileName = input.closest(".upload-field").querySelector(".archivo-nombre").value;
+            return {
+                file: file,
+                name: driveFileName || file.name
+            };
+        });
+    if (!data.nombre || !data.apellidos) {
+        showStatus("Los campos 'Nombres' y 'Apellidos' son obligatorios.", "error");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Enviar datos";
+        return;
     }
-  });
-
-  if (!data.nombre || !data.apellidos) {
-    showStatus("Los campos 'Nombres' y 'Apellidos' son obligatorios.", "error");
-    return;
-  }
-  
-  try {
-    showStatus("Enviando datos del formulario a Google Sheets...", "info");
-    const clientId = await sendFormDataToSheets(data);
-    
-    if (filesToUpload.length > 0) {
-      await uploadFilesToBackend(filesToUpload, data.nombre, data.apellidos, clientId);
+    try {
+        showStatus("Enviando datos y archivos al back-end...", "info");
+        const formData = new FormData();
+        formData.append("formData", JSON.stringify(data));
+        filesToUpload.forEach(fileData => {
+            formData.append("files", fileData.file, fileData.name);
+        });
+        const response = await fetch(`${BACKEND_URL}/submit-form`, {
+            method: "POST",
+            body: formData,
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || response.statusText);
+        }
+        showStatus("✅ ¡Datos guardados y archivos subidos correctamente!", "success");
+        function resetFormState() {
+            document.getElementById('dataForm').reset();
+            window.currentDependentsData = [];
+            const uploadFields = $all(".upload-field:not(:first-child)");
+            uploadFields.forEach(field => field.remove());
+            const poBoxCheck = $("#poBoxcheck");
+            if (poBoxCheck) poBoxCheck.checked = false;
+            initPOBox();
+            document.querySelector('.tabs-nav .tab-button').click();
+        }
+        resetFormState();
+    } catch (error) {
+        console.error("Error al enviar el formulario:", error);
+        showStatus("Ocurrió un error al procesar tu solicitud: " + error.message, "error");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Enviar datos";
     }
-    
-    function resetFormState() {
-        document.getElementById('dataForm').reset();
-        window.currentDependentsData = [];
-        const uploadFields = $all(".upload-field:not(:first-child)");
-        uploadFields.forEach(field => field.remove());
-        const poBoxCheck = $("#poBoxcheck");
-        if (poBoxCheck) poBoxCheck.checked = false;
-        initPOBox();
-        document.querySelector('.tabs-nav .tab-button').click();
-        showStatus("✅ Formulario y archivos procesados exitosamente!", "success");
-    }
-
-    resetFormState();
-    
-  } catch (error) {
-    console.error("Error al enviar el formulario:", error);
-    showStatus("Ocurrió un error al procesar tu solicitud: " + error.message, "error");
-  }
 }
-
-// =============================== Init global ==============================
 document.addEventListener("DOMContentLoaded", () => {
-  initTabs();
-  initPOBox();
-  initPayment();
-  attachSSNFormatting();
-  attachCurrencyFormatting();
-  initUploads();
-  initCignaPlans();
-  attachDateInputMask('#fechaNacimiento');
-
-  const addBtn = $("#addDependentsBtn");
-  const editBtn = $("#editDependentsBtn");
-  const closeBtn = $("#closeDependentsModal");
-  const modal = $("#dependentsModal");
-  const container = $("#modalDependentsContainer");
-  const cantidad = $("#cantidadDependientes");
-
-  if (addBtn) addBtn.addEventListener("click", openDependentsModal);
-  if (editBtn) editBtn.addEventListener("click", openDependentsModal);
-  if (closeBtn) closeBtn.addEventListener("click", closeDependentsModal);
-  if (modal) modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeDependentsModal();
-  });
-
-  const modalBody = modal?.querySelector(".modal-body");
-  if (modalBody && !modalBody.querySelector("#addDependent") && !modalBody.querySelector("#saveDependentsBtn")) {
-    const actions = document.createElement("div");
-    actions.className = "grid-item full-width button-dependent-section";
-    actions.innerHTML = `
+    initTabs();
+    initPOBox();
+    initPayment();
+    attachSSNFormatting();
+    attachCurrencyFormatting();
+    initUploads();
+    initCignaPlans();
+    attachDateInputMask($all('#fechaNacimiento'));
+    attachDateInputMask($all('.dependent-fecha'));
+    const addBtn = $("#addDependentsBtn");
+    const editBtn = $("#editDependentsBtn");
+    const closeBtn = $("#closeDependentsModal");
+    const modal = $("#dependentsModal");
+    const container = $("#modalDependentsContainer");
+    const cantidad = $("#cantidadDependientes");
+    if (addBtn) addBtn.addEventListener("click", openDependentsModal);
+    if (editBtn) editBtn.addEventListener("click", openDependentsModal);
+    if (closeBtn) closeBtn.addEventListener("click", closeDependentsModal);
+    if (modal) modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeDependentsModal();
+    });
+    const modalBody = modal?.querySelector(".modal-body");
+    if (modalBody && !modalBody.querySelector("#addDependent") && !modalBody.querySelector("#saveDependentsBtn")) {
+        const actions = document.createElement("div");
+        actions.className = "grid-item full-width button-dependent-section";
+        actions.innerHTML = `
           <button type="button" id="addDependent" class="btn btn-primary">Añadir otro</button>
           <button type="button" id="saveDependentsBtn" class="btn btn-success">Guardar</button>
       `;
-    modalBody.appendChild(actions);
-  }
-  if ($("#addDependent")) $("#addDependent").addEventListener("click", () => addDependentField());
-  if ($("#saveDependentsBtn")) $("#saveDependentsBtn").addEventListener("click", saveDependentsData);
-
-  if (container) {
-    container.addEventListener("click", (e) => {
-      const btn = e.target.closest(".btn-remove-dependent");
-      if (btn) removeDependentField(btn);
-    });
-  }
-  if (cantidad) {
-    cantidad.addEventListener("change", () => {
-      const n = Math.max(0, parseInt(cantidad.value || "0", 10) || 0);
-      const cur = (window.currentDependentsData || []).length;
-      if (n > cur) {
-        for (let i = cur; i < n; i++)
-          window.currentDependentsData.push({
-            nombre: "",
-            apellido: "",
-            fechaNacimiento: "",
-            parentesco: "",
-            ssn: ""
-          });
-      } else if (n < cur) {
-        window.currentDependentsData = window.currentDependentsData.slice(0, n);
-      }
-    });
-  }
-
-  const form = document.getElementById("dataForm");
-  if (form) {
-    form.addEventListener("submit", onSubmit);
-  } else {
-    console.error("No se encontró el formulario con id 'dataForm'. Verifica el HTML.");
-  }
+        modalBody.appendChild(actions);
+    }
+    if ($("#addDependent")) $("#addDependent").addEventListener("click", () => addDependentField());
+    if ($("#saveDependentsBtn")) $("#saveDependentsBtn").addEventListener("click", saveDependentsData);
+    if (container) {
+        container.addEventListener("click", (e) => {
+            const btn = e.target.closest(".btn-remove-dependent");
+            if (btn) removeDependentField(btn);
+        });
+    }
+    if (cantidad) {
+        cantidad.addEventListener("change", () => {
+            const n = Math.max(0, parseInt(cantidad.value || "0", 10) || 0);
+            const cur = (window.currentDependentsData || []).length;
+            if (n > cur) {
+                for (let i = cur; i < n; i++)
+                    window.currentDependentsData.push({
+                        nombre: "",
+                        apellido: "",
+                        fechaNacimiento: "",
+                        parentesco: "",
+                        ssn: ""
+                    });
+            } else if (n < cur) {
+                window.currentDependentsData = window.currentDependentsData.slice(0, n);
+            }
+        });
+    }
+    const form = document.getElementById("dataForm");
+    if (form) {
+        form.addEventListener("submit", onSubmit);
+    } else {
+        console.error("No se encontró el formulario con id 'dataForm'. Verifica el HTML.");
+    }
 });
-
-// Compatibilidad por si quedaran handlers inline antiguos:
 window.addDependentField = addDependentField;
 window.removeDependentField = removeDependentField;
 window.saveDependentsData = saveDependentsData;
