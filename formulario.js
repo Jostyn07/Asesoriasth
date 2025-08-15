@@ -912,7 +912,7 @@ async function uploadFilesToBackend(files, nombre, apellidos, clientId) {
 async function onSubmit(e) {
   e.preventDefault();
 
-  const submitBtn = document.$("submitBtn");
+  const submitBtn = $("#submitBtn");
   submitBtn.disabled = true;
   submitBtn.textContent = "Enviando...";
 
@@ -1041,4 +1041,3 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addDependentField = addDependentField;
 window.removeDependentField = removeDependentField;
 window.saveDependentsData = saveDependentsData;
-
