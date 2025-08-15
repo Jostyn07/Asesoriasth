@@ -911,11 +911,7 @@ async function uploadFilesToBackend(files, nombre, apellidos, clientId) {
 
 async function onSubmit(e) {
   e.preventDefault();
-
-  const submitBtn = $("#submitBtn");
-  submitBtn.disabled = true;
-  submitBtn.textContent = "Enviando...";
-
+  
   const data = collectData();
   data.cignaPlans = collectAllCignaPlansWithDynamicFields();
   data.dependents = window.currentDependentsData;
@@ -932,21 +928,16 @@ async function onSubmit(e) {
 
   if (!data.nombre || !data.apellidos) {
     showStatus("Los campos 'Nombres' y 'Apellidos' son obligatorios.", "error");
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Enviar datos";
     return;
   }
   
   try {
     showStatus("Enviando datos del formulario a Google Sheets...", "info");
     const clientId = await sendFormDataToSheets(data);
-
     // Store last form data for file upload
     window.lastFormData = data;
     if (filesToUpload.length > 0) {
-      showStatus("Subiendo documentos...", "info");
       await uploadFilesToBackend(filesToUpload, data.nombre, data.apellidos, clientId);
-      showStatus("✅ Documentos subidos correctamente.", "success");
     }
     function resetFormState() {
         document.getElementById('dataForm').reset();
