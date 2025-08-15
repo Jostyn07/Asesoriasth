@@ -421,6 +421,7 @@ function initUploads() {
   const container = $("#customUploadContainer");
   if (!addBtn || !container) return;
 
+// Funcion para mostrar el tamaño del archivo de una forma en que se pueda entender mejor KB MB GB
   function fileSizeHuman(bytes) {
     if (bytes === 0) return "0 Bytes";
     const k = 1024,
@@ -429,8 +430,10 @@ function initUploads() {
     return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
   }
 
+// Funcion para eliminar un campo de carga
   function removeField(field) {
     const total = $all(".upload-field", container).length;
+    // Verifica si hay más de un campo, si no, muestra un mensaje de error porque siempre debe haber uno
     if (total <= 1) {
       alert("Debe mantener al menos un archivo.");
       return;
@@ -439,6 +442,7 @@ function initUploads() {
     renumber();
   }
 
+  // Muestra el nombre del archivo
   function onFileChange(input, nombreEl, infoEl) {
     if (input.files && input.files[0]) {
       const f = input.files[0];
@@ -455,6 +459,7 @@ function initUploads() {
     }
   }
 
+  // Agrega un nuevo campo de carga
   function addField() {
     const idx = $all(".upload-field", container).length;
     const field = document.createElement("div");
@@ -906,7 +911,11 @@ async function uploadFilesToBackend(files, nombre, apellidos, clientId) {
 
 async function onSubmit(e) {
   e.preventDefault();
-  
+
+  const submitBtn = document.$("#submitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Enviando...";
+
   const data = collectData();
   data.cignaPlans = collectAllCignaPlansWithDynamicFields();
   data.dependents = window.currentDependentsData;
@@ -923,16 +932,21 @@ async function onSubmit(e) {
 
   if (!data.nombre || !data.apellidos) {
     showStatus("Los campos 'Nombres' y 'Apellidos' son obligatorios.", "error");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Enviar datos";
     return;
   }
   
   try {
     showStatus("Enviando datos del formulario a Google Sheets...", "info");
     const clientId = await sendFormDataToSheets(data);
+
     // Store last form data for file upload
     window.lastFormData = data;
     if (filesToUpload.length > 0) {
+      showStatus("Subiendo documentos...", "info");
       await uploadFilesToBackend(filesToUpload, data.nombre, data.apellidos, clientId);
+      showStatus("✅ Documentos subidos correctamente.", "success");
     }
     function resetFormState() {
         document.getElementById('dataForm').reset();
