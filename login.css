@@ -146,3 +146,34 @@
     width: 24px;
     height: 24px;
 }
+
+.message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 250px;
+    padding: 16px 24px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    z-index: 9999;
+    opacity: 0.95;
+    transition: opacity 0.3s;
+}
+.message.info {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+}
+.message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #81c784;
+}
+.message.error {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #e57373;
+}
