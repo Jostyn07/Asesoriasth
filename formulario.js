@@ -232,11 +232,14 @@ function addDependentField(existingData = null) {
         <select class="form-input-formal dependent-parentesco form-select" required>
           <option value="">Seleccione el parentesco...</option>
           <option value="Cónyuge" ${d.parentesco === "Cónyuge" ? "selected" : ""}>Cónyuge</option>
-          <option value="Hijo/a" ${d.parentesco === "Hijo/a" ? "selected" : ""}>Hijo/a</option>
+          <option value="Hijo" ${d.parentesco === "Hijo" ? "selected" : ""}>Hijo</option>
+          <option value="Hija" ${d.parentesco === "Hija" ? "selected" : ""}>Hija</option>
           <option value="Padre" ${d.parentesco === "Padre" ? "selected" : ""}>Padre</option>
           <option value="Madre" ${d.parentesco === "Madre" ? "selected" : ""}>Madre</option>
-          <option value="Hermano/a" ${d.parentesco === "Hermano/a" ? "selected" : ""}>Hermano/a</option>
-          <option value="Abuelo/a" ${d.parentesco === "Abuelo/a" ? "selected" : ""}>Abuelo/a</option>
+          <option value="Hermano" ${d.parentesco === "Hermano" ? "selected" : ""}>Hermano</option>
+          <option value="Hermana" ${d.parentesco === "Hermana" ? "selected" : ""}>Hermana</option>
+          <option value="Abuelo" ${d.parentesco === "Abuelo" ? "selected" : ""}>Abuelo/a</option>
+          <option value="Abuela" ${d.parentesco === "Abuela" ? "selected" : ""}>Abuela</option>
           <option value="Otro" ${d.parentesco === "Otro" ? "selected" : ""}>Otro</option>
         </select>
       </div>
@@ -885,7 +888,7 @@ async function sendFormDataToSheets(data) {
   return clientId;
 }
 
-async function uploadFilesToBackend(files, nombre, apellidos, clientId) {
+async function uploadFilesToBackend(files) {
   if (files.length === 0) return;
 
   showStatus("Subiendo archivos...", "info");
@@ -895,7 +898,8 @@ async function uploadFilesToBackend(files, nombre, apellidos, clientId) {
     formData.append("files", fileData.file, fileData.name);
   });
   // Add form data as JSON string
-  formData.append("formData", JSON.stringify({ nombre, apellidos, clientId, ...window.lastFormData }));
+  formData.append("nombre", window.lastFormData?.nombre || "");
+  formData.append("apellidos", window.lastFormData?.apellidos || "");
 
   const response = await fetch(`${BACKEND_URL}/upload-files`, {
     method: "POST",
@@ -937,11 +941,11 @@ async function onSubmit(e) {
     // Store last form data for file upload
     window.lastFormData = data;
     if (filesToUpload.length > 0) {
-      await uploadFilesToBackend(filesToUpload, data.nombre, data.apellidos, clientId);
+      await uploadFilesToBackend(filesToUpload);
     }
     function resetFormState() {
         document.getElementById('dataForm').reset();
-        window.currentDependentsData = [];
+        window.currentDependentsData = [];f
         const uploadFields = $all(".upload-field:not(:first-child)");
         uploadFields.forEach(field => field.remove());
         const poBoxCheck = $("#poBoxcheck");
