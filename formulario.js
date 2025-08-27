@@ -912,71 +912,51 @@ async function uploadFilesToBackend(files, nombre, apellidos, clientId) {
 async function onSubmit(e) {
   e.preventDefault();
   
-  const submitBtn = $("#submitBtn");
-  submitBtn.disabled = true;
-  submitBtn.textContent = "Enviando...";
-
   const data = collectData();
   data.cignaPlans = collectAllCignaPlansWithDynamicFields();
   data.dependents = window.currentDependentsData;
 
-  const filesToUpload = Array.from(document.querySelectorAll("#customUploadContainer .upload-input"))
-    .filter(input => input.files && input.files.length > 0)
-    .map(input => {
+  const fileInputs = document.querySelectorAll("#customUploadContainer .upload-input");
+  const filesToUpload = [];
+  fileInputs.forEach(input => {
+    if (input.files && input.files.length > 0) {
       const file = input.files[0];
       const driveFileName = input.closest(".upload-field").querySelector(".archivo-nombre").value;
-      return { file: file, name: driveFileName || file.name };
-    });
+      filesToUpload.push({ file: file, name: driveFileName || file.name });
+    }
+  });
 
   if (!data.nombre || !data.apellidos) {
     showStatus("Los campos 'Nombres' y 'Apellidos' son obligatorios.", "error");
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Enviar datos";
     return;
   }
   
   try {
-    showStatus("Enviando datos y archivos al back-end...", "info");
-    const formData = new FormData();
-    formData.append("formData", JSON.stringify(data));
-    
-    filesToUpload.forEach(fileData => {
-        formData.append("files", fileData.file, fileData.name);
-    });
-
-    const response = await fetch(`${BACKEND_URL}/submit-form`, {
-      method: "POST",
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || response.statusText);
+    showStatus("Enviando datos del formulario a Google Sheets...", "info");
+    const clientId = await sendFormDataToSheets(data);
+    // Store last form data for file upload
+    window.lastFormData = data;
+    if (filesToUpload.length > 0) {
+      await uploadFilesToBackend(filesToUpload, data.nombre, data.apellidos, clientId);
     }
-    
-    showStatus("✅ ¡Datos guardados y archivos subidos correctamente!", "success");
-    
     function resetFormState() {
-      document.getElementById('dataForm').reset();
-      window.currentDependentsData = [];
-      const uploadFields = $all(".upload-field:not(:first-child)");
-      uploadFields.forEach(field => field.remove());
-      const poBoxCheck = $("#poBoxcheck");
-      if (poBoxCheck) poBoxCheck.checked = false;
-      initPOBox();
-      document.querySelector('.tabs-nav .tab-button').click();
+        document.getElementById('dataForm').reset();
+        window.currentDependentsData = [];
+        const uploadFields = $all(".upload-field:not(:first-child)");
+        uploadFields.forEach(field => field.remove());
+        const poBoxCheck = $("#poBoxcheck");
+        if (poBoxCheck) poBoxCheck.checked = false;
+        initPOBox();
+        document.querySelector('.tabs-nav .tab-button').click();
+        showStatus("✅ Formulario y archivos procesados exitosamente!", "success");
     }
-
     resetFormState();
-    
   } catch (error) {
     console.error("Error al enviar el formulario:", error);
     showStatus("Ocurrió un error al procesar tu solicitud: " + error.message, "error");
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Enviar datos";
   }
 }
+
 // =============================== Init global ==============================
 document.addEventListener("DOMContentLoaded", () => {
   initTabs();
