@@ -945,7 +945,7 @@ async function onSubmit(e) {
     }
     function resetFormState() {
         document.getElementById('dataForm').reset();
-        window.currentDependentsData = [];f
+        window.currentDependentsData = [];
         const uploadFields = $all(".upload-field:not(:first-child)");
         uploadFields.forEach(field => field.remove());
         const poBoxCheck = $("#poBoxcheck");
