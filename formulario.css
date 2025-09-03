@@ -395,6 +395,35 @@ textarea.form-control {
     box-shadow: 0 10px 30px rgba(108, 117, 125, 0.4);
 }
 
+.btn2 {
+    padding: 14px 28px;
+    border: none;
+    border-radius: var(--border-radius-small);
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 1rem;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 0.02em;
+}
+
+.btn-siguiente {
+    background: linear-gradient(135deg, var(--primary-color), var(--info-color));
+    color: white;
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.35);
+}
+
+.btn-siguiente:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.5);
+}
+
 .btn-success {
     background: linear-gradient(135deg, var(--secondary-color), var(--success-color));
     color: white;
@@ -868,4 +897,10 @@ input[type="radio"] {
 #pagoBancoContainer.active,
 #pagoTarjetaContainer.active {
   display: block;
+}
+footer {
+    background: var(--bg-darker);
+    color: var(--text-light);
+    padding: 15px 0;
+    text-align: center;
 }
