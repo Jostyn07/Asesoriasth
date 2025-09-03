@@ -74,6 +74,13 @@ function handlebtnSiguienteDocumentos() {
 }
 document.getElementById("btnSiguienteDocumentos")?.addEventListener("click", handlebtnSiguienteDocumentos);
 
+// ========================= Formato fecha estados unidos ========================
+function formatDateToUS(dateStr) {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-");
+  return `${month}/${day}/${year}`;
+}
+// ============================= Inicialización ==============================
 document.addEventListener("DOMContentLoaded", () => {
   ensureAuthenticated({
     interactive: true
@@ -1060,3 +1067,4 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addDependentField = addDependentField;
 window.removeDependentField = removeDependentField;
 window.saveDependentsData = saveDependentsData;
+
