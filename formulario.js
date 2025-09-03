@@ -50,6 +50,30 @@ function ensureAuthenticated({
   }
   return true;
 }
+
+// =========================== Funcion para pasar entre pestañas ============================
+function activateTab(tabId) {
+  document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove('active'));
+
+  const btn = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+  const tab = document.getElementById(`tab-${tabId}`);
+  if (btn) btn.classList.add('active');
+  if (tab) tab.classList.add('active');
+}
+
+// ============================ Pasar pagina a pagos ========================
+function handlebtnSiguientePagos() {
+  activateTab("pagos");
+}
+document.getElementById("btnSiguientePagos")?.addEventListener("click", handlebtnSiguientePagos);
+
+// ========================= Pasar pagina a Documentos ======================
+function handlebtnSiguienteDocumentos() {
+  activateTab("documentos");
+}
+document.getElementById("btnSiguienteDocumentos")?.addEventListener("click", handlebtnSiguienteDocumentos);
+
 document.addEventListener("DOMContentLoaded", () => {
   ensureAuthenticated({
     interactive: true
