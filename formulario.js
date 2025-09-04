@@ -80,7 +80,7 @@ function formatDateToUS(dateStr) {
   const [year, month, day] = dateStr.split("-");
   return `${month}/${day}/${year}`;
 }
-// ============================= Inicialización ==============================
+// ============================ Inicialización ==============================
 document.addEventListener("DOMContentLoaded", () => {
   ensureAuthenticated({
     interactive: true
@@ -686,6 +686,7 @@ function collectAllCignaPlansWithDynamicFields() {
 // ============================ Recolección general =========================
 function collectData() {
   const data = {
+    fechaRegistro: formatDateToUS($("#fechaRegistro")?.value) || "",
     nombre: $("#Nombre")?.value?.trim() || "",
     apellidos: $("#Apellidos")?.value?.trim() || "",
     sexo: $("#sexo")?.value || "",
@@ -701,6 +702,7 @@ function collectData() {
     casaApartamento: $("#casaApartamento")?.value?.trim() || "",
     condado: $("#condado")?.value?.trim() || "",
     ciudad: $("#Ciudad")?.value?.trim() || "",
+    estado: $("#estado")?.value || "",
     codigoPostal: $("#codigoPostal")?.value?.trim() || "",
     poBox: $("#poBoxcheck")?.checked ? $("#poBox")?.value?.trim() || "" : "",
     compania: $("#compania")?.value || "",
@@ -749,7 +751,7 @@ async function sendFormDataToSheets(data) {
 
   const obamacareData = [
     data.operador,
-    new Date().toLocaleDateString('es-ES'),
+    data.fechaRegistro,
     data.tipoVenta,
     data.claveSeguridad,
     'Titular',
@@ -764,7 +766,7 @@ async function sendFormDataToSheets(data) {
     data.ingresos,
     data.aplica,
     data.cantidadDependientes,
-    data.poBox || (data.direccion + (data.casaApartamento ? ', ' + data.casaApartamento : '') + ', ' + data.condado + ', ' + data.ciudad + ', ' + data.codigoPostal),
+    data.poBox || (data.direccion + (data.casaApartamento ? ', ' + data.casaApartamento : '') + ', ' + data.condado + ', ' + data.ciudad + ', ' + data.estado + ', ' + data.codigoPostal),
     data.compania,
     data.plan,
     data.creditoFiscal,
@@ -793,7 +795,7 @@ async function sendFormDataToSheets(data) {
   if (data.dependents && data.dependents.length > 0) {
     const dependentsRows = data.dependents.map(dep => [
         data.operador || '', 
-        new Date().toLocaleDateString('es-ES'),
+        data.fechaRegistro.toLocaleDateString('es-ES'),
         data.tipoVenta || '',
         data.claveSeguridad || '',
         dep.parentesco || '',
@@ -1067,4 +1069,3 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addDependentField = addDependentField;
 window.removeDependentField = removeDependentField;
 window.saveDependentsData = saveDependentsData;
-
