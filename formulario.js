@@ -105,7 +105,14 @@ function showStatus(msg, type = "info") {
   box.textContent = msg;
   box.className = `status-message ${type}`;
   box.style.display = "block";
-  if (type !== "error") setTimeout(() => (box.style.display = "none"), 4500);
+  if (type !== "error") setTimeout(() => (box.style.display = "none"), 6000);
+}
+
+// Barra de carga para uploads
+function showLoaderBar(show = true) {
+  const loader = document.getElementById('loaderBar');
+  if (!loader) return;
+  loader.style.display = show ? 'flex' : 'none';
 }
 
 // Convertir formato de fecha de MM/DD/AAAA a ISO YYYY-MM-DD
@@ -937,26 +944,29 @@ async function uploadFilesToBackend(files) {
 
   showStatus("Subiendo archivos...", "info");
   const formData = new FormData();
-  // Add files
   files.forEach(fileData => {
     formData.append("files", fileData.file, fileData.name);
   });
-  // Add form data as JSON string
   formData.append("nombre", window.lastFormData?.nombre || "");
   formData.append("apellidos", window.lastFormData?.apellidos || "");
+  formData.append("telefono", window.lastFormData?.telefono || "");
 
-  const response = await fetch(`${BACKEND_URL}/upload-files`, {
-    method: "POST",
-    body: formData
-  });
-
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.error || "Error desconocido al subir archivos.");
+  try {
+    const response = await fetch(`${BACKEND_URL}/upload-files`, {
+      method: "POST",
+      body: formData
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Error desconocido al subir archivos.");
+    }
+    showStatus("✅ Archivos subidos a Drive correctamente.", "success");
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  } catch (error) {
+    showStatus("Ocurrió un error al procesar tu solicitud: " + error.message, "error");
+    await new Promise(resolve => setTimeout(resolve, 3000));
   }
-  showStatus("✅ Archivos subidos a Drive correctamente.", "success");
 }
-
 async function onSubmit(e) {
   e.preventDefault();
   
