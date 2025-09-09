@@ -752,7 +752,7 @@ function collectData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "https://asesoriasth-backend.onrender.com/api";
+const BACKEND_URL = "https://asesoriasth-backend.onrender.com";
 
 async function sendFormDataToSheets(data) {
   if (!ensureAuthenticated({
@@ -1113,3 +1113,4 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addDependentField = addDependentField;
 window.removeDependentField = removeDependentField;
 window.saveDependentsData = saveDependentsData;
+
