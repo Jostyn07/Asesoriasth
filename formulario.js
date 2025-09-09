@@ -11,7 +11,6 @@ const SCOPES = "https://www.googleapis.com/auth/drive.file https://www.googleapi
 const LOGIN_URL = "./index.html";
 const AUTH_SKEW_MS = 30_000;
 
-
 function getAuthState() {
   const accessToken = localStorage.getItem("google_access_token");
   const expiryStr = localStorage.getItem("google_token_expiry");
@@ -944,36 +943,16 @@ async function uploadFilesToBackend(files) {
   if (files.length === 0) return;
 
   showStatus("Subiendo archivos...", "info");
-
-  // 1. Crea la carpeta primero
-  const folderName = `${window.lastFormData?.nombre || "Cliente"}_${window.lastFormData?.apellidos || ""}_${window.lastFormData?.telefono || ""}`;
-  let folderId;
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/create-folder`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ folderName })
-    });
-    const data = await res.json();
-    if (!res.ok || !data.folderId) {
-      throw new Error(data.message || "No se pudo crear la carpeta.");
-    }
-    folderId = data.folderId;
-  } catch (error) {
-    showStatus("Error al crear la carpeta en Drive: " + error.message, "error");
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    throw error;
-  }
-
-  // 2. Sube los archivos a la carpeta creada
   const formData = new FormData();
   files.forEach(fileData => {
     formData.append("files", fileData.file, fileData.name);
   });
-  formData.append("folderId", folderId);
+  formData.append("nombre", window.lastFormData?.nombre || "");
+  formData.append("apellidos", window.lastFormData?.apellidos || "");
+  formData.append("telefono", window.lastFormData?.telefono || "");
 
   try {
-    const response = await fetch(`${BACKEND_URL}/upload-to-folder`, {
+    const response = await fetch(`${BACKEND_URL}/upload-files`, {
       method: "POST",
       body: formData
     });
@@ -984,12 +963,10 @@ async function uploadFilesToBackend(files) {
     showStatus("✅ Archivos subidos a Drive correctamente.", "success");
     await new Promise(resolve => setTimeout(resolve, 1500));
   } catch (error) {
-    showStatus("Ocurrió un error al subir archivos: " + error.message, "error");
+    showStatus("Ocurrió un error al procesar tu solicitud: " + error.message, "error");
     await new Promise(resolve => setTimeout(resolve, 3000));
-    throw error;
   }
 }
-
 async function onSubmit(e) {
   e.preventDefault();
   
