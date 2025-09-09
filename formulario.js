@@ -752,7 +752,7 @@ function collectData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "https://asesoriasth-backend.onrender.com";
+const BACKEND_URL = "https://asesoriasth-backend.onrender.com/api";
 
 async function sendFormDataToSheets(data) {
   if (!ensureAuthenticated({
@@ -949,7 +949,7 @@ async function uploadFilesToBackend(files) {
   const folderName = `${window.lastFormData?.nombre || "Cliente"}_${window.lastFormData?.apellidos || ""}_${window.lastFormData?.telefono || ""}`;
   let folderId;
   try {
-    const res = await fetch(`${BACKEND_URL}/create-folder`, {
+    const res = await fetch(`${BACKEND_URL}/api/create-folder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ folderName })
@@ -1113,4 +1113,3 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addDependentField = addDependentField;
 window.removeDependentField = removeDependentField;
 window.saveDependentsData = saveDependentsData;
-
