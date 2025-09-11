@@ -751,7 +751,7 @@ function collectData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "https://asesoriasth-backend.onrender.com/api";
+const BACKEND_URL = "http://localhost:3001/api"; // Cambia esto a tu URL real
 
 async function sendFormDataToSheets(data) {
   if (!ensureAuthenticated({
@@ -942,11 +942,36 @@ async function sendFormDataToSheets(data) {
 async function uploadFilesToBackend(files) {
   if (files.length === 0) return;
 
+  showStatus("Creando carpeta en Drive...", "info");
+  // 1. Crear la carpeta en Drive
+  let folderId = null;
+  try {
+    const nombre = window.lastFormData?.nombre || "";
+    const apellidos = window.lastFormData?.apellidos || "";
+    const folderName = `${nombre} ${apellidos} ${window.lastFormData?.telefono || ""}`.trim();
+    const res = await fetch(`${BACKEND_URL}/create-folder`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folderName })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.folderId) {
+      throw new Error(data.error || "No se pudo crear la carpeta en Drive.");
+    }
+    folderId = data.folderId;
+  } catch (error) {
+    showStatus("Error al crear la carpeta en Drive: " + error.message, "error");
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    return;
+  }
+
+  // 2. Subir archivos a la carpeta creada
   showStatus("Subiendo archivos...", "info");
   const formData = new FormData();
   files.forEach(fileData => {
     formData.append("files", fileData.file, fileData.name);
   });
+  formData.append("folderId", folderId);
   formData.append("nombre", window.lastFormData?.nombre || "");
   formData.append("apellidos", window.lastFormData?.apellidos || "");
   formData.append("telefono", window.lastFormData?.telefono || "");
