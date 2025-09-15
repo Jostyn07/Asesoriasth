@@ -88,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(() => ensureAuthenticated({
     interactive: false
   }), 60_000);
+  localStorage.removeItem('dependentsDraft'); // Limpia el borrador de dependientes al cargar la página
 });
 window.addEventListener("storage", (e) => {
   if (e.key === "google_access_token" && !e.newValue) {
