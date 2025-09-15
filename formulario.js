@@ -1167,6 +1167,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+function closeDependentsModal() {
+  const modal = $("#dependentsModal");
+  const cantidad = $("#cantidadDependientes");
+  if (modal) modal.style.display = "none";
+  if (cantidad && parseInt(cantidad.value, 10) === 0) {
+    const container = document.getElementById("modalDependentsContainer");
+    if (container) container.innerHTML = "";
+    window.currentDependentsData = [];
+    localStorage.removeItem("dependentsDraft");
+  }
+}
 
   const form = document.getElementById("dataForm");
   if (form) {
