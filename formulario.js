@@ -239,6 +239,31 @@ function saveDependentsData() {
   showStatus(`✅ ${data.length} dependiente(s) guardado(s)`, "success");
 }
 
+function saveDependentsDraft() {
+  const container = document.getElementById("modalDependentsContainer");
+  if (!container) return;
+  const items = container.querySelectorAll(".dependent-item-formal");
+  const data = [];
+  items.forEach((card) => {
+    const nombre = card.querySelector(".dependent-nombre")?.value.trim();
+    const apellido = card.querySelector(".dependent-apellido")?.value.trim();
+    const fechaNacimiento = card.querySelector(".dependent-fecha")?.value || "";
+    const parentesco = card.querySelector(".dependent-parentesco")?.value || "";
+    const ssn = card.querySelector(".dependent-ssn")?.value.trim() || "";
+    const estadoMigratorio = card.querySelector(`.dependent-estado-migratorio`)?.value || "";
+    const aplica = card.querySelector(".dependent-aplica")?.value || "";
+
+    data.push({
+      nombre,
+      apellido,
+      fechaNacimiento,
+      parentesco,
+      ssn,
+      estadoMigratorio
+    });
+  });
+  localStorage.setItem('dependentsDraft', JSON.stringify(data));
+}
 function addDependentField(existingData = null) {
   const container = $("#modalDependentsContainer");
   if (!container) return;
@@ -268,22 +293,22 @@ function addDependentField(existingData = null) {
     <div class="dependent-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
       <div class="form-group-formal">
         <label class="form-label-formal">Nombre <span class="required-asterisk">*</span></label>
-        <input type="text" class="form-input-formal dependent-nombre form-control" value="${d.nombre}" required>
+        <input type="text" class="form-input-formal dependent-nombre form-control" name="NombreDependiente" value="${d.nombre}" required>
       </div>
       <div class="form-group-formal">
         <label class="form-label-formal">Apellido <span class="required-asterisk">*</span></label>
-        <input type="text" class="form-input-formal dependent-apellido form-control" value="${d.apellido}" required>
+        <input type="text" class="form-input-formal dependent-apellido form-control" name="ApellidoDependiente" value="${d.apellido}" required>
       </div>
     </div>
 
     <div class="dependent-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
       <div class="form-group-formal">
         <label class="form-label-formal">Fecha de Nacimiento (mm/dd/aaaa) <span class="required-asterisk">*</span></label>
-        <input type="text" class="form-input-formal dependent-fecha form-control" value="${d.fechaNacimiento}" placeholder="MM/DD/AAAA" maxlength="10" required>
+        <input type="text" class="form-input-formal dependent-fecha form-control" name="FechaNacimientoDependiente" value="${d.fechaNacimiento}" placeholder="MM/DD/AAAA" maxlength="10" required>
       </div>
       <div class="form-group-formal">
         <label class="form-label-formal">Parentesco <span class="required-asterisk">*</span></label>
-        <select class="form-input-formal dependent-parentesco form-select" required>
+        <select class="form-input-formal dependent-parentesco form-select" name="ParentescoDependiente" required>
           <option value="">Seleccione el parentesco...</option>
           <option value="Cónyuge" ${d.parentesco === "Cónyuge" ? "selected" : ""}>Cónyuge</option>
           <option value="Hijo" ${d.parentesco === "Hijo" ? "selected" : ""}>Hijo</option>
@@ -314,12 +339,12 @@ function addDependentField(existingData = null) {
     <div class="dependent-form-grid-full" style="margin-bottom:12px;">
       <div class="form-group-formal">
         <label class="form-label-formal">Número de Seguro Social (SSN)</label>
-        <input type="text" class="form-input-formal dependent-ssn form-control" value="${d.ssn}" placeholder="###-##-####" maxlength="11">
+        <input type="text" class="form-input-formal dependent-ssn form-control" name="SSNDependiente" value="${d.ssn}" placeholder="###-##-####" maxlength="11">
       </div>
     </div>
     <div class="form-group-formal">
       <label class="form-label-formal">Aplica? <span class="required-asterisk">*</span></label>
-      <select class="form-input-formal dependent-aplica form-select" required>
+      <select class="form-input-formal dependent-aplica form-select" name="AplicaDependiente" required>
         <option value="" ${d.aplica ? "selected" : ""}>Seleccione...</option>
         <option value="Si" ${d.aplica === "Si" ? "selected" : ""}>Sí</option>
         <option value="No" ${d.aplica === "No" ? "selected" : ""}>No</option>
@@ -330,6 +355,11 @@ function addDependentField(existingData = null) {
   setupDependentValidation(card);
   updateDependentNumbers();
   updateDependentsCount();
+
+  card.querySelectorAll("input, select").forEach(el => {
+    el.addEventListener("input", saveDependentsDraft);
+    el.addEventListener("change", saveDependentsDraft);
+  });
 }
 
 function removeDependentField(buttonOrCard) {
@@ -776,7 +806,7 @@ function collectData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "https://asesoriasth-backend.onrender.com/api"; // Cambia esto a tu URL real
+const BACKEND_URL = "http://localhost:3001/api"; // Cambia esto a tu URL real
 
 async function sendFormDataToSheets(data) {
   if (!ensureAuthenticated({
@@ -1112,18 +1142,28 @@ document.addEventListener("DOMContentLoaded", () => {
   if (cantidad) {
     cantidad.addEventListener("change", () => {
       const n = Math.max(0, parseInt(cantidad.value || "0", 10) || 0);
-      const cur = (window.currentDependentsData || []).length;
-      if (n > cur) {
-        for (let i = cur; i < n; i++)
-          window.currentDependentsData.push({
-            nombre: "",
-            apellido: "",
-            fechaNacimiento: "",
-            parentesco: "",
-            ssn: ""
-          });
-      } else if (n < cur) {
-        window.currentDependentsData = window.currentDependentsData.slice(0, n);
+      const container = document.getElementById("modalDependentsContainer");
+      if (n === 0) {
+        // Elimina todos los dependientes del DOM y del draft
+        if (container) container.innerHTML = "";
+        window.currentDependentsData = [];
+        localStorage.removeItem("dependentsDraft");
+      } else {
+        const cur = (window.currentDependentsData || []).length;
+        if (n > cur) {
+          for (let i = cur; i < n; i++)
+            window.currentDependentsData.push({
+              nombre: "",
+              apellido: "",
+              fechaNacimiento: "",
+              parentesco: "",
+              ssn: "",
+              aplica: "",
+              estadoMigratorio: ""
+            });
+        } else if (n < cur) {
+          window.currentDependentsData = window.currentDependentsData.slice(0, n);
+        }
       }
     });
   }
