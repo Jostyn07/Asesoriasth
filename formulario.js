@@ -806,7 +806,7 @@ function collectData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "http://localhost:3001/api"; // Cambia esto a tu URL real
+const BACKEND_URL = "https://asesoriasth-backend.onrender.com/api"; // Cambia esto a tu URL real
 
 async function sendFormDataToSheets(data) {
   if (!ensureAuthenticated({
