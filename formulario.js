@@ -197,6 +197,7 @@ function saveDependentsData() {
     const fechaNacimiento = card.querySelector(".dependent-fecha")?.value || "";
     const parentesco = card.querySelector(".dependent-parentesco")?.value || "";
     const ssn = card.querySelector(".dependent-ssn")?.value.trim() || "";
+    const estadoMigratorio = card.querySelector(`.dependent-estado-migratorio`)?.value || "";
 
     if (fechaNacimiento && !/^\d{2}\/\d{2}\/\d{4}$/.test(fechaNacimiento)) {
       ok = false;
@@ -216,7 +217,8 @@ function saveDependentsData() {
       fechaNacimiento,
       parentesco,
       ssn,
-      aplica
+      aplica,
+      estadoMigratorio
     });
   });
   if (!ok) return;
@@ -236,6 +238,7 @@ function addDependentField(existingData = null) {
     apellido: "",
     fechaNacimiento: "",
     parentesco: "",
+    estadoMigratorio: "",
     ssn: "",
     aplica: ""
   };
@@ -283,6 +286,18 @@ function addDependentField(existingData = null) {
           <option value="Abuela" ${d.parentesco === "Abuela" ? "selected" : ""}>Abuela</option>
           <option value="Otro" ${d.parentesco === "Otro" ? "selected" : ""}>Otro</option>
         </select>
+      </div>
+      <div class="grid-item">
+        <label for="estadoMigratorio" class="form-label">Estado migratorio:</label>
+        <select name="estadoMigratorio" class="form-select dependent-estado-migratorio">
+          <option value="">Selecciona...</option>
+          <option value="Ciudadano">Ciudadano</option>
+          <option value="Residente Permanente">Residente Permanente</option>
+          <option value="Permiso de trabajo">Permiso de trabajo</option>
+          <option value="Asilo politico">Asilo politico</option>
+          <option value="I-94">I-94</option>
+          <option value="Otro">Otro</option>
+        </select>  
       </div>
     </div>
 
@@ -751,7 +766,7 @@ function collectData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "https://asesoriasth-backend.onrender.com/api"; // Cambia esto a tu URL real
+const BACKEND_URL = "http://localhost:3001/api"; // Cambia esto a tu URL real
 
 async function sendFormDataToSheets(data) {
   if (!ensureAuthenticated({
@@ -819,11 +834,11 @@ async function sendFormDataToSheets(data) {
         dep.parentesco || '',
         dep.nombre || '',
         dep.apellido || '',
-        '',
-        '',
-        '',
+        '', // Sexo
+        '', // Correo
+        '', // Teléfono
         dep.fechaNacimiento || '',
-        '',
+        dep.estadoMigratorio || '',
         dep.ssn || '',
         '',
         dep.aplica || '',
@@ -835,8 +850,7 @@ async function sendFormDataToSheets(data) {
         '',
         '',
         '',
-        clientId,
-        ''
+        clientId
     ]);
     const dependentsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME_OBAMACARE}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
     await fetch(dependentsUrl, {
@@ -1115,4 +1129,3 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addDependentField = addDependentField;
 window.removeDependentField = removeDependentField;
 window.saveDependentsData = saveDependentsData;
-
