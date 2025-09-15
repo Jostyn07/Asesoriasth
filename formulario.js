@@ -158,6 +158,15 @@ function openDependentsModal() {
   const container = $("#modalDependentsContainer");
   if (!modal || !container) return;
 
+  //intenta restaurar borrador
+  const draft = localStorage.getItem('dependentsDraft');
+  if (draft) {
+    try {
+      window.currentDependentsData = JSON.parse(draft);
+    } catch (e) {
+      window.currentDependentsData = [];
+    }
+  }
   container.innerHTML = "";
   if (window.currentDependentsData.length) {
     window.currentDependentsData.forEach((d) => addDependentField(d));
@@ -224,6 +233,7 @@ function saveDependentsData() {
   if (!ok) return;
 
   window.currentDependentsData = data;
+  localStorage.setItem('dependentsDraft', JSON.stringify(data)); // <-- Guarda el draft
   updateDependentsCount();
   closeDependentsModal();
   showStatus(`✅ ${data.length} dependiente(s) guardado(s)`, "success");
@@ -1039,6 +1049,7 @@ async function onSubmit(e) {
     function resetFormState() {
         document.getElementById('dataForm').reset();
         window.currentDependentsData = [];
+        localStorage.removeItem("dependentsDraft");
         const uploadFields = $all(".upload-field:not(:first-child)");
         uploadFields.forEach(field => field.remove());
         const poBoxCheck = $("#poBoxcheck");
