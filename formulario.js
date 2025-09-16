@@ -9,7 +9,7 @@ const SCOPES = "https://www.googleapis.com/auth/drive.file https://www.googleapi
 
 // ========================= Auth Guard + fetch wrapper ======================
 const LOGIN_URL = "./index.html";
-const AUTH_SKEW_MS = 30_000;
+const AUTH_SKEW_MS = 9 * 60 * 60 * 1000; // 9 horas en milisegundos
 
 function getAuthState() {
   const accessToken = localStorage.getItem("google_access_token");
@@ -771,6 +771,7 @@ function collectData() {
     ssn: $("#SSN")?.value || "",
     ingresos: $("#ingresos")?.value || "",
     ocupación: $("#ocupación")?.value?.trim() || "",
+    nacionalidad: $("#nacionalidad")?.value?.trim() || "",
     aplica: $("#aplica")?.value || "",
     cantidadDependientes: $("#cantidadDependientes")?.value || "0",
     direccion: $("#direccion")?.value?.trim() || "",
@@ -840,6 +841,7 @@ async function sendFormDataToSheets(data) {
     data.ssn,
     data.ingresos,
     data.ocupación,
+    data.nacionalidad,
     data.aplica,
     data.cantidadDependientes,
     data.poBox || (data.direccion + (data.casaApartamento ? ', ' + data.casaApartamento : '') + ', ' + data.condado + ', ' + data.ciudad + ', ' + data.estado + ', ' + data.codigoPostal),
@@ -883,11 +885,13 @@ async function sendFormDataToSheets(data) {
         dep.fechaNacimiento || '',
         dep.estadoMigratorio || '',
         dep.ssn || '',
-        '',
+        '', // Ingresos
+        '', // Ocupación
+        '', // Nacionalidad
         dep.aplica || '',
-        '',
-        '',
-        '',
+        '', // Cantidad de dependientes
+        '', // Dirección completa
+        '', // Compañía
         '',
         '',
         '',
