@@ -9,7 +9,7 @@ const SCOPES = "https://www.googleapis.com/auth/drive.file https://www.googleapi
 
 // ========================= Auth Guard + fetch wrapper ======================
 const LOGIN_URL = "./index.html";
-const AUTH_SKEW_MS = 9 * 60 * 60 * 1000; // 9 horas en milisegundos
+const AUTH_SKEW_MS = 30_000; // 30 segundos de margen
 
 function getAuthState() {
   const accessToken = localStorage.getItem("google_access_token");
