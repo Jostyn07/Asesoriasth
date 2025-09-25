@@ -12,44 +12,120 @@ const LOGIN_URL = "./index.html";
 const AUTH_SKEW_MS = 30_000; // 30 segundos de margen
 
 function getAuthState() {
-  const accessToken = localStorage.getItem("google_access_token");
-  const expiryStr = localStorage.getItem("google_token_expiry");
-  const expiryMs = expiryStr ? parseInt(expiryStr, 10) : 0;
+  const sessionActive = localStorage.getItem('sessionActive');
+  const authProvider = localStorage.getItem('authProvider');
+  const userInfo = localStorage.getItem('userInfo');
   return {
-    accessToken,
-    expiryMs
+    sessionActive: sessionActive === 'true',
+    authProvider,
+    userInfo: userInfo ? JSON.parse(userInfo) : null,
+    accessToken: authProvider === 'google' ? 
+      localStorage.getItem('google_access_token') :
+      localStorage.getItem('msAccessToken'),
   };
 }
 
 function isTokenValid(skew = AUTH_SKEW_MS) {
-  const {
-    accessToken,
-    expiryMs
-  } = getAuthState();
-  return !!accessToken && Date.now() + skew < expiryMs;
+  const sessionActive = localStorage.getItem('sessionActive');
+  return sessionActive === 'true' ;
 }
 
-function promptAndRedirectToLogin(msg = "Tu sesión ha expirado. Debes iniciar sesión nuevamente.") {
-  localStorage.removeItem("google_access_token");
-  localStorage.removeItem("google_token_expiry");
-  localStorage.removeItem("google_user_info");
-  try {
-    alert(msg);
-  } catch (_) {}
-  window.location.href = LOGIN_URL;
-}
+function ensureAuthenticated ({interactive = true} = {}) {
+  const auth = getAuthState();
 
-function ensureAuthenticated({
-  interactive = true
-} = {}) {
-  if (!isTokenValid()) {
-    const msg = "Tu sesión ha expirado. Inicia sesión para continuar.";
-    if (interactive) promptAndRedirectToLogin(msg);
-    else promptAndRedirectToLogin();
-    return false;
+  if (auth.sessionActive && auth.authProvider && auth.userInfo) {
+    return true;
   }
-  return true;
+  
+  if (interactive) {
+    promptAndRedirectToLogin("Debes iniciar sesión para continuar.");
+  }
+
+  return false;
 }
+
+// Redirige al login con un mensaje opcional
+function promptAndRedirectToLogin(message) {
+  showStatus(message, "error");
+  setTimeout(() => {
+    window.location.href = LOGIN_URL
+  }, 2000)
+}
+
+// Funcion para cerrar sesión
+function signOut() {
+  //limpiar toda la información de sesión
+  localStorage.removeItem('google_access_token');
+  localStorage.removeItem('google_user_info');
+  localStorage.removeItem('authProvider');
+  localStorage.removeItem('userInfo');
+  localStorage.removeItem('sessionActive');
+  localStorage.removeItem('msAccessToken');
+  localStorage.removeItem('dependentsDraft');
+
+  showStatus("Has cerrado sesión.", "success");
+
+  //redirigir al login
+  setTimeout(() => {
+    window.location.href = "./index.html";
+  }, 1500);
+}
+
+window.signOut = signOut; // hacer global para usar en HTML
+
+// Funcion para crear el boton de cerrar sesión al formulario
+function addSignOutButton() {
+  const authState = getAuthState();
+  if (!authState.sessionActive) return;
+
+  // Crear botón de cerrar sesión
+  const signOutBtn = document.createElement("button");
+  signOutBtn.innerHTML = `
+  <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+            <path fill-rule="evenodd" d="m15.854 8.354-3-3a.5.5 0 0 0-.708.708L14.293 8H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708z"/>
+        </svg>
+        Cerrar Sesión
+  `;
+  signOutBtn.className = "btn btn-outline-danger";
+  signOutBtn.style.cssText = ` 
+    position: fixed;
+    top: 20px;  
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  `;
+
+  signOutBtn.addEventListener('mouseover', () => {
+    signOutBtn.style.background = '#c82333';
+    signOutBtn.style.borderColor = '#bd2130';
+  });
+
+  signOutBtn.addEventListener('mouseout', () => {
+    signOutBtn.style.background = '#dc3545';
+    signOutBtn.style.borderColor = '#dc3545';
+  });
+  signOutBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (confirm("¿Estás seguro que deseas cerrar sesión?")) {
+      signOut();
+    }
+  });
+
+document.body.appendChild(signOutBtn)
+}
+
+
 
 // =========================== Funcion para pasar entre pestañas ============================
 function activateTab(tabId) {
@@ -64,15 +140,97 @@ function activateTab(tabId) {
 
 // ============================ Pasar pagina a pagos ========================
 function handlebtnSiguientePagos() {
+  if (!validateObamacareFields()) return;
   activateTab("pagos");
 }
 document.getElementById("btnSiguientePagos")?.addEventListener("click", handlebtnSiguientePagos);
 
 // ========================= Pasar pagina a Documentos ======================
 function handlebtnSiguienteDocumentos() {
+  if (!validatePagosFields()) return;
   activateTab("documentos");
 }
 document.getElementById("btnSiguienteDocumentos")?.addEventListener("click", handlebtnSiguienteDocumentos);
+
+// ============================ Validaciones por pestaña =======================
+function validateObamacareFields() {
+  const requiredFields = {};
+  
+  const poBoxCheck = document.getElementById('poBoxcheck');
+  if (poBoxCheck && poBoxCheck.checked) {
+    requiredFields['#poBox'] = 'El campo PO Box es obligatorio';
+  } else {
+    requiredFields['#direccion'] = 'El campo dirección es obligatorio';
+    requiredFields['#casaApartamento'] = 'El campo casa/apartamento es obligatorio';
+    requiredFields['#condado'] = 'El campo condado es obligatorio';
+    requiredFields['#Ciudad'] = 'El campo ciudad es obligatorio';
+    requiredFields['#estado'] = 'El campo estado es obligatorio';
+    requiredFields['#codigoPostal'] = 'El campo código postal es obligatorio';
+  }
+
+  requiredFields['#fechaRegistro'] = 'El campo fecha de registro es obligatorio';
+  requiredFields['#Nombre'] = 'El campo nombre es obligatorio';
+  requiredFields['#Apellidos'] = 'El campo apellidos es obligatorio';
+  requiredFields['#sexo'] = 'El campo sexo es obligatorio';
+  requiredFields['#fechaNacimiento'] = 'El campo fecha de nacimiento es obligatorio';
+  requiredFields['#estadoMigratorio'] = 'El campo estado migratorio es obligatorio';
+  requiredFields['#compania'] = 'El campo compañía aseguradora es obligatorio';
+  requiredFields['#plan'] = 'El campo plan es obligatorio';
+  requiredFields['#operador'] = 'El campo operador es obligatorio';
+
+  return validateFields(requiredFields);
+}
+
+function validatePagosFields() {
+  const metodoPago = document.querySelector('input[name="metodoPago"]:checked');
+  
+  if (!metodoPago) {
+    return true;
+  }
+
+  let requiredFields = {};
+  if (metodoPago.value === 'banco') {
+    requiredFields = {
+      '#numCuenta': 'El número de cuenta es obligatorio',
+      '#numRuta': 'El número de ruta es obligatorio',
+      '#nombreBanco': 'El nombre del banco es obligatorio',
+      '#titularCuenta': 'El titular de la cuenta es obligatorio'
+    };
+  } else if (metodoPago.value === 'tarjeta') {
+    requiredFields = {
+      '#numTarjeta': 'El número de tarjeta es obligatorio',
+      '#fechaVencimiento': 'La fecha de vencimiento es obligatoria',
+      '#cvc': 'El CVC/CVV es obligatorio',
+      '#titularTarjeta': 'El titular de la tarjeta es obligatorio'
+    };
+  }
+
+  return validateFields(requiredFields);
+}
+
+function validateFields(requiredFields) {
+  for (const selector in requiredFields) {
+    const el = document.querySelector(selector);
+    
+    if (el && !el.disabled) {
+      const value = el.value ? el.value.trim() : '';
+      
+      if (!value) {
+        showStatus(requiredFields[selector], 'error');
+        
+        setTimeout(() => {
+          el.focus();
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('invalid');
+          setTimeout(() => el.classList.remove('invalid'), 3000);
+        }, 100);
+        
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 // ========================= Formato fecha estados unidos ========================
 function formatDateToUS(dateStr) {
@@ -80,16 +238,7 @@ function formatDateToUS(dateStr) {
   const [year, month, day] = dateStr.split("-");
   return `${month}/${day}/${year}`;
 }
-// ============================ Inicialización ==============================
-document.addEventListener("DOMContentLoaded", () => {
-  ensureAuthenticated({
-    interactive: true
-  });
-  setInterval(() => ensureAuthenticated({
-    interactive: false
-  }), 60_000);
-  localStorage.removeItem('dependentsDraft'); // Limpia el borrador de dependientes al cargar la página
-});
+  
 window.addEventListener("storage", (e) => {
   if (e.key === "google_access_token" && !e.newValue) {
     promptAndRedirectToLogin("Sesión finalizada en otra pestaña. Inicia sesión nuevamente.");
@@ -102,11 +251,17 @@ const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
 function showStatus(msg, type = "info") {
   const box = $("#statusMessage");
-  if (!box) return;
-  box.textContent = msg;
+  if (!box) {
+    console.error("Elemento #statusMessage no encontrado");
+    return;
+  }
+  
   box.className = `status-message ${type}`;
+  box.textContent = msg;
   box.style.display = "block";
-  if (type !== "error") setTimeout(() => (box.style.display = "none"), 6000);
+  
+  const timeout = type === "error" ? 8000 : 5000;
+  setTimeout(() => box.style.display = "none", timeout);
 }
 
 // Barra de carga para uploads
@@ -455,6 +610,24 @@ function initPayment() {
   };
   rbBanco.addEventListener("change", refresh);
   rbTarjeta.addEventListener("change", refresh);
+  refresh();
+
+  const clearPaymentBtn = $("#clearPaymentBtn");
+  if (clearPaymentBtn) {
+    clearPaymentBtn.addEventListener("click", () => {
+      rbBanco.checked = false;
+      rbTarjeta.checked = false;
+      refresh();
+
+      const bankInputs = boxBanco.querySelectorAll("input");
+      const cardInputs = boxTarjeta.querySelectorAll("input");
+
+      bankInputs.forEach(input => input.value = "");
+      cardInputs.forEach(input => input.value = "");
+
+      showStatus("✅ Datos de pago limpiados", "success");
+    });
+  }
   refresh();
 }
 
@@ -808,6 +981,32 @@ function collectData() {
   return data;
 }
 
+// ============================ Validaciones de datos obligatorios =======================
+function validateClientData() {
+  // Validar Obamacare
+  if (!validateObamacareFields()) {
+    activateTab('obamacare');
+    return false;
+  }
+
+  // Validar Pagos
+  if (!validatePagosFields()) {
+    activateTab('pagos');
+    return false;
+  }
+
+  // Validar documentos
+  try {
+    validateUploadsOrThrow();
+  } catch (error) {
+    activateTab('documentos');
+    showStatus(error.message, 'error');
+    return false;
+  }
+
+  return true;
+}
+
 // =================================== API ===================================
 const BACKEND_URL = "https://asesoriasth-backend.onrender.com/api"; // Cambia esto a tu URL real
 
@@ -1056,6 +1255,10 @@ async function uploadFilesToBackend(files) {
 async function onSubmit(e) {
   e.preventDefault();
   
+  if (!validateClientData()) {
+    return;
+  }
+
   const data = collectData();
   data.cignaPlans = collectAllCignaPlansWithDynamicFields();
   data.dependents = window.currentDependentsData;
@@ -1104,6 +1307,24 @@ async function onSubmit(e) {
 
 // =============================== Init global ==============================
 document.addEventListener("DOMContentLoaded", () => {
+ensureAuthenticated({
+    interactive: true
+  });
+  setInterval(() => ensureAuthenticated({
+    interactive: false
+  }), 60_000);
+  localStorage.removeItem('dependentsDraft'); // Limpia el borrador de dependientes al cargar la página
+  addSignOutButton();
+
+  // Mostrar información del usuario
+  const authState = getAuthState();
+  if (authState.userInfo) {
+    const userName = document.getElementById("userName");
+    if (userName) {
+      userName.textContent = authState.userInfo.name;
+    }
+  };
+
   initTabs();
   initPOBox();
   initPayment();
