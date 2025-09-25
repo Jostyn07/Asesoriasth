@@ -28,11 +28,21 @@ function handleAuthResponse(response) {
     }
 
     accessToken = response.access_token;
+    
+    // Guardar datos de sesión SIN fecha de expiración
     localStorage.setItem('google_access_token', accessToken);
-    localStorage.setItem('google_token_expiry', Date.now() + response.expires_in * 1000);
+    localStorage.setItem('authProvider', 'google');
+    localStorage.setItem('sessionActive', 'true'); // Indicador de sesión activa
 
     getUserInfo(accessToken).then(userInfo => {
         localStorage.setItem('google_user_info', JSON.stringify(userInfo));
+        localStorage.setItem('userInfo', JSON.stringify({
+            id: userInfo.sub,
+            name: userInfo.name,
+            email: userInfo.email,
+            provider: 'google'
+        }));
+        
         console.log('Usuario autenticado:', userInfo.name);
 
         showMessage("Autenticación exitosa. Bienvenido, " + userInfo.name + "!", "success");
@@ -63,7 +73,9 @@ async function getUserInfo(accessToken) {
     } catch (error) {
         console.error("Error en la solicitud de información del usuario:", error);
         return {
-            name: "Usuario"
+            name: "Usuario",
+            email: "usuario@email.com",
+            sub: "unknown"
         };
     }
 }
@@ -82,24 +94,54 @@ function initiateLogin() {
     }
 }
 
-window.onload = () => {
-    const existingToken = localStorage.getItem('google_access_token');
-    const tokenExpiry = localStorage.getItem('google_token_expiry');
-    const userInfo = localStorage.getItem('google_user_info');
+// Función para verificar si hay sesión activa (sin verificar expiración)
+function checkExistingAuth() {
+    const sessionActive = localStorage.getItem('sessionActive');
+    const authProvider = localStorage.getItem('authProvider');
+    const userInfo = localStorage.getItem('userInfo');
     
-    // Verificar si el token ya expiró
-    if (existingToken && tokenExpiry && userInfo && Date.now() < parseInt(tokenExpiry)) {
-        console.log("Token de acceso existente encontrado. Redirigiendo al usuario...");
-        window.location.href = redirect_URL;
-        return;
+    // Solo verificar si la sesión está marcada como activa
+    if (sessionActive === 'true' && authProvider && userInfo) {
+        if (authProvider === 'google') {
+            const googleToken = localStorage.getItem('google_access_token');
+            const googleUserInfo = localStorage.getItem('google_user_info');
+            return googleToken && googleUserInfo;
+        } else if (authProvider === 'microsoft') {
+            return checkMicrosoftAuth();
+        }
     }
     
-    // Limpiar tokens expirados o no válidos
-    if (existingToken) {
-        localStorage.removeItem('google_access_token');
-        localStorage.removeItem('google_token_expiry');
-        localStorage.removeItem('google_user_info');
-        console.log("Token expirado encontrado y eliminado.");
+    return false;
+}
+
+// Función para cerrar sesión manualmente
+function signOut() {
+    // Limpiar toda la información de sesión
+    localStorage.removeItem('google_access_token');
+    localStorage.removeItem('google_user_info');
+    localStorage.removeItem('authProvider');
+    localStorage.removeItem('userInfo');
+    localStorage.removeItem('sessionActive');
+    localStorage.removeItem('msAccessToken');
+    
+    showMessage("Sesión cerrada exitosamente", "success");
+    
+    // Redirigir a la página de login
+    setTimeout(() => {
+        window.location.href = "./index.html";
+    }, 1000);
+}
+
+window.onload = () => {
+    // Verificar si hay sesión activa (sin verificar tiempo)
+    if (checkExistingAuth()) {
+        console.log("Sesión activa encontrada. Redirigiendo al usuario...");
+        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+        showMessage(`Bienvenido de nuevo, ${userInfo.name}!`, "success");
+        setTimeout(() => {
+            window.location.href = redirect_URL;
+        }, 1000);
+        return;
     }
     
     if (typeof google === 'undefined') {
@@ -129,4 +171,14 @@ window.onload = () => {
         console.error("Botón de inicio de sesión no encontrado.");
         showMessage("Botón de inicio de sesión no disponible.", "error");
     }
+
+    // Event listener para el botón de Outlook
+    const outlookBtn = document.getElementById('outlookSignInBtn');
+    if (outlookBtn) {
+        outlookBtn.addEventListener('click', signInWithMicrosoft);
+    }
 }
+
+// Exportar funciones para uso global
+window.signOut = signOut;
+window.checkExistingAuth = checkExistingAuth;
