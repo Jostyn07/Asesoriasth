@@ -10,11 +10,14 @@ const SCOPES = "https://www.googleapis.com/auth/drive.file https://www.googleapi
 // ========================= Auth Guard + fetch wrapper ======================
 const LOGIN_URL = "./index.html";
 const AUTH_SKEW_MS = 30_000; // 30 segundos de margen
+const MAX_RETRIES = 3;
 
 function getAuthState() {
   const sessionActive = localStorage.getItem('sessionActive');
   const authProvider = localStorage.getItem('authProvider');
   const userInfo = localStorage.getItem('userInfo');
+  const tokenExpiry = localStorage.getItem('token_expiry_time');
+
   return {
     sessionActive: sessionActive === 'true',
     authProvider,
@@ -22,26 +25,109 @@ function getAuthState() {
     accessToken: authProvider === 'google' ? 
       localStorage.getItem('google_access_token') :
       localStorage.getItem('msAccessToken'),
+    tokenExpiry: tokenExpiry ? parseInt(tokenExpiry) : null
   };
 }
 
 function isTokenValid(skew = AUTH_SKEW_MS) {
-  const sessionActive = localStorage.getItem('sessionActive');
-  return sessionActive === 'true' ;
+  const authState = getAuthState();
+
+  if (!authState.sessionActive) return false;
+
+  // Para Google, verificamos expiración
+  if (authState.authProvider === 'google' && authState.tokenExpiry) {
+    return Date.now() < (authState.tokenExpiry - skew);
+  }
+
+  // para microsoft, asumimos que el token es válido (no tenemos expiración guardada)
+  return authState.sessionActive;
 }
 
 function ensureAuthenticated ({interactive = true} = {}) {
   const auth = getAuthState();
 
   if (auth.sessionActive && auth.authProvider && auth.userInfo) {
+    // Verificar si el token está próximo a expirar
+    if (auth.authProvider === 'google' && auth.tokenExpiry) {
+      const timeUntilExpiry = auth.tokenExpiry - Date.now();
+            
+      // Si queda menos de 5 minutos, intentar renovar
+      if (timeUntilExpiry < 5 * 60 * 1000) {
+        console.log('Token próximo a expirar, renovando...');
+        if (typeof refreshAccessToken === 'function') {
+          refreshAccessToken();
+        }
+      }
+    }
     return true;
   }
-  
+
   if (interactive) {
-    promptAndRedirectToLogin("Debes iniciar sesión para continuar.");
+    promptAndRedirectToLogin("Sesión expirada. Por favor, inicia sesión nuevamente.");
   }
 
   return false;
+}
+// Wrapper para fetch con manejo automático de errores de autenticación
+async function authenticatedFetch(url, options = {}, retries = MAX_RETRIES) {
+    const authState = getAuthState();
+    
+    if (!authState.accessToken) {
+        throw new Error('No hay token de acceso disponible');
+    }
+    
+    // Configurar headers de autorización
+    const headers = {
+        'Authorization': `Bearer ${authState.accessToken}`,
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+    
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+            
+            // Si es error 401, intentar renovar token y reintentar
+            if (response.status === 401 && attempt < retries - 1) {
+                console.log(`Intento ${attempt + 1}: Error 401, renovando token...`);
+                
+                // Intentar renovar token
+                if (typeof refreshAccessToken === 'function') {
+                    await new Promise((resolve) => {
+                        refreshAccessToken();
+                        // Esperar un poco para que se renueve el token
+                        setTimeout(resolve, 2000);
+                    });
+                    
+                    // Actualizar token en headers
+                    const newAuthState = getAuthState();
+                    if (newAuthState.accessToken) {
+                        headers['Authorization'] = `Bearer ${newAuthState.accessToken}`;
+                        continue; // Reintentar con nuevo token
+                    }
+                }
+                
+                // Si no se puede renovar, redirigir al login
+                promptAndRedirectToLogin("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+                throw new Error('Token expirado y no se pudo renovar');
+            }
+            
+            return response;
+            
+        } catch (error) {
+            console.error(`Error en intento ${attempt + 1}:`, error);
+            
+            if (attempt === retries - 1) {
+                throw error;
+            }
+            
+            // Esperar antes del siguiente intento
+            await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+        }
+    }
 }
 
 // Redirige al login con un mensaje opcional
@@ -54,8 +140,16 @@ function promptAndRedirectToLogin(message) {
 
 // Funcion para cerrar sesión
 function signOut() {
-  //limpiar toda la información de sesión
+  // Limpiar intervalo de auto-refresh si existe
+  if (window.tokenRefreshInterval) {
+    clearInterval(window.tokenRefreshInterval);
+  }
+  
+  // Limpiar toda la información de sesión
   localStorage.removeItem('google_access_token');
+  localStorage.removeItem('google_refresh_token');      // AGREGAR
+  localStorage.removeItem('token_expiry_time');         // AGREGAR
+  localStorage.removeItem('session_start_time');        // AGREGAR
   localStorage.removeItem('google_user_info');
   localStorage.removeItem('authProvider');
   localStorage.removeItem('userInfo');
@@ -65,13 +159,28 @@ function signOut() {
 
   showStatus("Has cerrado sesión.", "success");
 
-  //redirigir al login
   setTimeout(() => {
     window.location.href = "./index.html";
   }, 1500);
 }
 
 window.signOut = signOut; // hacer global para usar en HTML
+
+// Función global para refrescar token (referenciada en ensureAuthenticated)
+function refreshAccessToken() {
+  console.log('Función refreshAccessToken llamada desde formulario.js');
+  
+  // Si la función existe en login.js, llamarla
+  if (typeof window.refreshAccessToken === 'function') {
+    return window.refreshAccessToken();
+  } else {
+    console.warn('refreshAccessToken no disponible, redirigiendo al login');
+    promptAndRedirectToLogin("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+  }
+}
+
+// Hacer disponible globalmente
+window.refreshAccessToken = refreshAccessToken;
 
 // Funcion para crear el boton de cerrar sesión al formulario
 function addSignOutButton() {
