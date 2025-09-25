@@ -171,8 +171,12 @@ function refreshAccessToken() {
   console.log('Función refreshAccessToken llamada desde formulario.js');
   
   // Si la función existe en login.js, llamarla
-  if (typeof window.refreshAccessToken === 'function') {
-    return window.refreshAccessToken();
+  //if (typeof window.refreshAccessToken === 'function') {
+  //  return window.refreshAccessToken();
+  if (typeof window.refreshGoogleToken === 'function') {
+    return window.refreshGoogleToken();
+  } else if (window.parent && typeof window.parent.refreshAccessToken === 'function') {
+    return window.parent.refreshAccessToken();
   } else {
     console.warn('refreshAccessToken no disponible, redirigiendo al login');
     promptAndRedirectToLogin("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
@@ -180,7 +184,9 @@ function refreshAccessToken() {
 }
 
 // Hacer disponible globalmente
-window.refreshAccessToken = refreshAccessToken;
+// window.refreshAccessToken = refreshAccessToken;
+
+window.refreshFormAccessToken = refreshAccessToken; // Alias
 
 // Funcion para crear el boton de cerrar sesión al formulario
 function addSignOutButton() {
