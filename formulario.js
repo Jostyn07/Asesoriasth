@@ -465,7 +465,7 @@ function showStatus(msg, type = "info") {
   box.textContent = msg;
   box.style.display = "block";
   
-  const timeout = type === "error" ? 8000 : 15000;
+  const timeout = type === "error" ? 8000 : 50000;
   setTimeout(() => box.style.display = "none", timeout);
 }
 
@@ -2629,4 +2629,5 @@ window.loadDraft = loadDraft;
 window.deleteDraft = deleteDraft;
 window.toggleDraftMenu = toggleDraftMenu;
 window.exportDraft = exportDraft;
+
 window.showDraftInfo = showDraftInfo;
