@@ -269,14 +269,14 @@ app.post('/api/submit-form-data', async (req, res) => {
                 '', // Teléfono
                 dep.fechaNacimiento || '',
                 dep.estadoMigratorio || '',
-                dep.ssn || '',
+                dep.ssn || '', 
                 '', // Ingresos
                 '', // Ocupación
                 '', // Nacionalidad
                 dep.aplica || '',
                 '', // Cantidad de dependientes
                 '', // Dirección completa (vacío para dependientes)
-                '', '', '', '', '', '', '', // Campos de Póliza vacíos
+                '', '', '', '', '', '', // Campos de Póliza vacíos
                 clientId
             ]);
         });
