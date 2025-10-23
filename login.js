@@ -7,6 +7,8 @@ const LOGIN_ENDPOINT = "/api/login"
 const FORMULARIO_URL = "./formulario.html"
 const BACKEND_BASE_URL = "https://asesoriasth-backend-88xb.onrender.com" //Usar URL de render
 
+const ADMIN_URL = "./admin/admin.html";
+
 
 function showMessage(message, type = 'info') {
     const messageDiv = document.createElement('div');
@@ -21,16 +23,21 @@ function showMessage(message, type = 'info') {
     }, 3000);
 }
 
-function handleLoginResponse (token, userName) {
+function handleLoginResponse (token, user) {
     localStorage.setItem('authProvider', 'local');
     localStorage.setItem('sessionActive', 'true');
     localStorage.setItem('local_jwt_token', token);
-    localStorage.setItem('userInfo', JSON.stringify({ name: userName, provider:'local'}));
+    localStorage.setItem('userInfo', JSON.stringify({ 
+        name: user.name, 
+        provider:'local', 
+        rol: user.rol
+    }));
 
-    showMessage(`¡Bienvenido, ${userName}!`, "success");
+    showMessage(`¡Bienvenido, ${user.name}!`, "success");
 
+    const redirectPage = user.rol === 'admin' ? ADMIN_URL : FORMULARIO_URL;
     setTimeout(() => {
-        window.location.href = FORMULARIO_URL;
+        window.location.href = redirectPage;
     }, 1500);
 }
 
@@ -169,13 +176,13 @@ async function onSumbitLogin(e) {
             throw new Error(result.error || 'Credenciales no validas.')
         }
         // Autenticación exitosa
-        handleLoginResponse(result.token, result.user.name);
+        handleLoginResponse(result.token, result.user);
     } catch (error) {
         console.error("Error de login:", error.message);
         showMessage(error.message, "error");
     } finally {
         if(sumbitBtn) {
-            sumbitBtn.classList.remove('btn-login');
+            sumbitBtn.classList.remove('btn-loading');
             sumbitBtn.textContent = 'Iniciar Sesión';
         }
     }
@@ -183,10 +190,10 @@ async function onSumbitLogin(e) {
 
 //Configuración para el logout
 window.signOut = () => {
-    localStorage.removeItem('auth.Provider');
+    localStorage.removeItem('authProvider');
     localStorage.removeItem('sessionActive');
     localStorage.removeItem('local_jwt_token');
-    localStorage.removeItem('userInfor');
+    localStorage.removeItem('userInfo');
 
     showMessage("Sesión cerrada", "success");
 
@@ -206,9 +213,11 @@ window.onload = () => {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         showMessage(`Bienvenido de nuevo, ${userInfo?.name}!`, "success");
 
+        const redirectPage = user.rol === 'admin' ? ADMIN_URL : FORMULARIO_URL;
+
         setTimeout(() => {
 
-            window. location.href = FORMULARIO_URL;
+            window. location.href = redirectPage;
         }, 1000);
     }
 };
