@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración</title>
+    <link rel="stylesheet" href="./admin.css">    
+</head>
+<div>
+    <div class="status-message" id="statusMessage" style="display: none;"></div>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h2 class="main-title">Registro de pólizas</h2>
+            <button class="btn btn-primary" onclick="fetchPolicies()">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
+                    <path d="M11 2H9v1.5a.5.5 0 0 0 1 0V2z"/>
+                    <path d="M4.5 12h-4v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2h-4.5a.5.5 0 0 1 0-1h4.5v-2a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v2a.5.5 0 0 1 0 1zM2 13.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+            Actualizar Datos
+        </button>
+        </div>
+        <div class="policiesContainet">
+            <p id="loadingMessage">Cargando datos...</p>
+            <div class="table-responsive">
+                <table class="data-base" id="policiesTable" style="display:none">
+                    <thead>
+                        <tr>
+                            <th>ID Clientes</th>
+                            <th>Fecha</th>
+                            <th>Nombre</th>
+                            <th>Operador</th>
+                            <th>Compañia</th>
+                            <th>Prima</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th>Dependientes</th>
+                            <th>Planes Cigna</th>
+                        </tr>
+                    </thead>
+                    <tbody id="policiesBody">
+                        <tr>
+                            <td>A viewport</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="../formulario.js"></script>
+    <script type="module" src="./admin.js"></script>
+</body>
+</html>
