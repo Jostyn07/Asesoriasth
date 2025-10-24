@@ -451,10 +451,10 @@ window.addEventListener("storage", (e) => {
 });
 
 // =============================== Utilidades ===============================
-const $ = (sel, root = document) => root.querySelector(sel);
-const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+export const $ = (sel, root = document) => root.querySelector(sel);
+export const $all = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-function showStatus(msg, type = "info") {
+export function showStatus(msg, type = "info") {
   const box = $("#statusMessage");
   if (!box) {
     console.error("Elemento #statusMessage no encontrado");

@@ -213,7 +213,7 @@ window.onload = () => {
         const userInfo = JSON.parse(localStorage.getItem('userInfo'));
         showMessage(`Bienvenido de nuevo, ${userInfo?.name}!`, "success");
 
-        const redirectPage = user.rol === 'admin' ? ADMIN_URL : FORMULARIO_URL;
+        const redirectPage = userInfo?.rol === 'admin' ? ADMIN_URL : FORMULARIO_URL;
 
         setTimeout(() => {
 

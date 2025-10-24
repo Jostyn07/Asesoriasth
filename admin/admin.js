@@ -1,10 +1,8 @@
 // import { error } from "console";
 // import { load } from "mime";
 
-import { showStatus } from "../formulario";
+import { showStatus, $, $all } from "../formulario.js";
 const BACKEND_URL = "https://asesoriasth-backend-88xb.onrender.com";
-
-const $ = (sel) => document.querySelector(sel)
 
 async function fetchPolicies() {
     const loadingMessage = $("#loadingMessage");
@@ -48,16 +46,16 @@ async function fetchPolicies() {
             const fecha = new Date(policy.fecha_registro).toLocaleDateString('es-ES');
 
             // Insertar celdas
-            row.insertcell().textContent = policy.client_id;
-            row.insertcell().textContent = fecha;
-            row.insertcell().textContent = policy.nombre_completo;
-            row.insertcell().textContent = policy.operador;
-            row.insertcell().textContent = policy.compania;
-            row.insertcell().textContent = `$${prima}`;
-            row.insertcell().textContent = telefono;
-            row.insertcell().textContent = correo;
-            row.insertcell().textContent = dependentsCount > 0 ? `${dependentsCount} Dptes.` : '0';
-            row.insertcell().textContent = cignaCount > 0 ? `${cignaCount} planes` : '0';
+            row.insertCell().textContent = policy.client_id;
+            row.insertCell().textContent = fecha;
+            row.insertCell().textContent = policy.nombre_completo;
+            row.insertCell().textContent = policy.operador;
+            row.insertCell().textContent = policy.compania;
+            row.insertCell().textContent = `$${prima}`;
+            row.insertCell().textContent = telefono;
+            row.insertCell().textContent = correo;
+            row.insertCell().textContent = dependentsCount > 0 ? `${dependentsCount} Dptes.` : '0';
+            row.insertCell().textContent = cignaCount > 0 ? `${cignaCount} planes` : '0';
         })
     } catch (error) {
         console.error("Error al cargar las pólizas:", error);
