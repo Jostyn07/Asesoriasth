@@ -1268,32 +1268,48 @@ async function sendFormDataToSheets(data) {
   }
 }
 
-async function uploadFilesToBackend(files, folderNameFromSheets) {
+async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null, existingFolderLink = null) {
   if (files.length === 0) return;
 
   showStatus("Creando carpeta en Drive...", "info");
-  // 1. Crear la carpeta en Drive
+
   let folderId = null;
+  let folderLink = existingFolderLink || null;
+
   try {
-    // const nombre = window.lastFormData?.nombre || "";
-    // const apellidos = window.lastFormData?.apellidos || "";
-    // const folderName = `${nombre} ${apellidos} ${window.lastFormData?.telefono || ""}`.trim();
     const folderName = folderNameFromSheets;
+    if (!folderLink) {
+      if (!folderName) throw new Error("No se puedo generar el nombre de la carpeta");
 
-    if (!folderName) throw new Error("No se puedo generar el nombre de la carpeta");
+      const res = await fetch(`${BACKEND_URL}/api/create-folder`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderName })
+      });
 
-    const res = await fetch(`${BACKEND_URL}/api/create-folder`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ folderName })
-    });
-    const data = await res.json();
-    if (!res.ok || !data.folderId) {
-      throw new Error(data.error || "No se pudo crear la carpeta en Drive.");
+      const data = await res.json();
+      if (!res.ok || (!data.folderId && !data.folderLink && !data.FolderLink)) {
+        throw new Error(data.error || "No se pudo crear la carpeta en Drive.");
+      }
+
+      folderId = data.folderId || null;
+      folderLink = data.folderLink || data.FolderLink || null;
+
+      // Si el backend no devolvió link pero sí folderId, construir link estándar de Drive
+      if (!folderLink && folderId) folderLink = `https://drive.google.com/drive/folders/${folderId}`;
+    } else {
+      // intentar extraer folderId desde el link si es posible
+      const match = String(folderLink).match(/folders\/([a-zA-Z0-9_\-]+)/);
+      if (match) folderId = match[1];
     }
-    folderId = data.folderId;
+
+    if (!folderId && !folderLink) {
+      throw new Error("No se obtuvo folderId ni folderLink desde el backend.");
+    }
+
   } catch (error) {
     showStatus("Error al crear la carpeta en Drive: " + error.message, "error");
+    console.error("Error creando carpeta:", error);
     await new Promise(resolve => setTimeout(resolve, 3000));
     return;
   }
@@ -1304,7 +1320,8 @@ async function uploadFilesToBackend(files, folderNameFromSheets) {
   files.forEach(fileData => {
     formData.append("files", fileData.file, fileData.name);
   });
-  formData.append("folderId", folderId);
+  formData.append("folderId", folderId || "");
+  formData.append("folderLink", folderLink || "");
   formData.append("nombre", window.lastFormData?.nombre || "");
   formData.append("apellidos", window.lastFormData?.apellidos || "");
   formData.append("telefono", window.lastFormData?.telefono || "");
@@ -1318,11 +1335,50 @@ async function uploadFilesToBackend(files, folderNameFromSheets) {
     if (!response.ok) {
       throw new Error(result.error || "Error desconocido al subir archivos.");
     }
+
     showStatus("✅ Archivos subidos a Drive correctamente.", "success");
     await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Intentar guardar el folderLink en la "nube" (backend/Sheets)
+    if (clientId && folderLink) {
+      try {
+        await saveFolderLinkToBackend(clientId, folderLink);
+      } catch (err) {
+        console.warn("No se pudo guardar folderLink via backend:", err);
+      }
+    }
+
   } catch (error) {
     showStatus("Ocurrió un error al procesar tu solicitud: " + error.message, "error");
+    console.error("Error subiendo archivos:", error);
     await new Promise(resolve => setTimeout(resolve, 3000));
+  }
+}
+
+async function saveFolderLinkToBackend(clientId, folderLink) {
+  // Intenta primero guardar mediante un endpoint del backend
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/save-folder-link`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clientId, folderLink })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      console.log("✅ Folder link guardado en backend:", data);
+      showStatus("✅ Link de carpeta guardado en la nube.", "success");
+      return true;
+    } else {
+      console.warn("Backend no pudo guardar folder link:", data);
+      throw new Error(data.error || "Backend error al guardar link");
+    }
+  } catch (error) {
+    console.warn("Fallo guardar folderLink en backend, omitiendo. Error:", error);
+    // Si se desea, aquí se podría intentar actualizar Sheets directamente usando authenticatedFetch,
+    // pero eso requiere conocer la hoja/columna exacta y permisos. Por ahora solo informamos.
+    throw error;
   }
 }
 async function onSubmit(e) {
@@ -1390,20 +1446,20 @@ async function onSubmit(e) {
 
     // Enviar datos del formulario
     showStatus("Enviando datos del formulario...", "info");
-    // const clientId = await sendFormDataToSheets(data); // Se usaba para enviar por el frontend
     const sheetResult = await sendFormDataToSheets(data);
     const clientId = sheetResult.clientId;
-    const folderName = sheetResult.folderName;
+    const folderName = sheetResult.folderName || `${data.nombre} ${data.apellidos}`;
+    const folderLinkFromResult = sheetResult.folderLink || null;
 
     console.log('✅ Formulario enviado con ID:', clientId);
-    
+
     // Guardar datos para upload de archivos
     window.lastFormData = data;
-    
-    // Subir archivos si hay
+
+    // Subir archivos si hay; pasar clientId y posible folderLink que backend haya devuelto
     if (filesToUpload.length > 0) {
-      showStatus("enviando archivos...", "info", );
-      await uploadFilesToBackend(filesToUpload, folderName);
+      showStatus("Enviando archivos...", "info");
+      await uploadFilesToBackend(filesToUpload, folderName, clientId, folderLinkFromResult);
     }
 
     // Eliminar borrador guardado

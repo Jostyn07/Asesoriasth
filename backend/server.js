@@ -155,6 +155,11 @@ app.post('/api/upload-files', upload.array('files'), async (req, res) => {
                     fields: 'id, webViewLink',
                     supportsAllDrives: true
                 });
+                res.status(201).send({
+                    message: 'Carpeta creada exitosamente',
+                    folderId: response.data.id,
+                    folderLink: response.data.webViewLink,
+                })
                 uploadedFileLinks.push(response.data.webViewLink);
             }
         }
@@ -249,7 +254,8 @@ app.post('/api/submit-form-data', async (req, res) => {
             cleanCurrency(data.prima) || '',
             data.link || '',
             data.observaciones || '' , // CORREGIDO: observacion a observaciones
-            clientId,          
+            clientId,
+            data.folderLink || '',          
         ];
         
         let obamacareRows = [obamacareData];
