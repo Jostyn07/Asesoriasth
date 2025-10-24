@@ -1476,7 +1476,7 @@ async function onSubmit(e) {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Enviar datos';
-      submitBtn.classList.remove('brn-loading');
+      submitBtn.classList.remove('btn-loading');
     }
 
   } finally {
