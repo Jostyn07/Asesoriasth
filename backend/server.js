@@ -231,6 +231,7 @@ app.post('/api/submit-form-data', async (req, res) => {
             data.sexo || '',
             data.correo || '',
             data.telefono || '',
+            data.telefono2 || '',
             data.fechaNacimiento || '',
             data.estadoMigratorio || '',
             data.ssn || '',

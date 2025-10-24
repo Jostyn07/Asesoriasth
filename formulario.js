@@ -1167,6 +1167,7 @@ function collectData() {
     sexo: $("#sexo")?.value || "",
     correo: $("#correo")?.value?.trim() || "",
     telefono: $("#telefono")?.value?.trim() || "",
+    telefono2: $("#telefono2")?.value.trim() || "",
     fechaNacimiento: $("#fechaNacimiento")?.value || "",
     estadoMigratorio: $("#estadoMigratorio")?.value || "",
     ssn: $("#SSN")?.value || "",
@@ -1808,7 +1809,7 @@ function calculateCompletionPercentage(data) {
   ];
 
   const optionalFields = [
-    'sexo', 'ssn', 'ingresos', 'ocupación', 'nacionalidad',
+    'sexo', 'telefono2', 'ssn', 'ingresos', 'ocupación', 'nacionalidad',
     'aplica', 'direccion', 'casaApartamento', 'condado', 'ciudad',
     'estado', 'codigoPostal', 'creditoFiscal', 'prima', 'link', 
     'tipoVenta', 'claveSeguridad', 'observaciones'
@@ -1972,6 +1973,7 @@ function fillFormWithData(data) {
     'sexo': 'sexo',
     'correo': 'correo',
     'telefono': 'telefono',
+    'telefono2': 'telefono2',
     'fechaNacimiento': 'fechaNacimiento',
     'estadoMigratorio': 'estadoMigratorio',
     'SSN': 'ssn',
