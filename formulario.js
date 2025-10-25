@@ -1275,8 +1275,6 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
 
   let folderId = null;
   let folderLink = existingFolderLink || null;
-  console.log(folderLink)
-  console.log(folderId)
 
   try {
     const folderName = folderNameFromSheets;
@@ -1470,6 +1468,12 @@ async function onSubmit(e) {
     // Resetear formulario
     resetFormState();
     showStatus("✅ Formulario y archivos procesados exitosamente!", "success");
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar datos';
+      submitBtn.classList.remove('btn-loading');
+    }
 
   } catch (error) {
     console.error("❌ Error completo en onSubmit:", error);
