@@ -1309,16 +1309,12 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
       throw new Error("No se obtuvo folderId ni folderLink desde el backend.");
     }
 
-    console.log(folderLink)
-    console.log(folderId)
   } catch (error) {
     showStatus("Error al crear la carpeta en Drive: " + error.message, "error");
     console.error("Error creando carpeta:", error);
     await new Promise(resolve => setTimeout(resolve, 3000));
     return;
   }
-  console.log(folderLink)
-  console.log(folderId)
 
   // 2. Subir archivos a la carpeta creada
   showStatus("Subiendo archivos...", "info");
