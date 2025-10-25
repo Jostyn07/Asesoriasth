@@ -1275,7 +1275,7 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
 
   let folderId = null;
   let folderLink = existingFolderLink || null;
-
+  let clientFolderLink = '';
   try {
     const folderName = folderNameFromSheets;
     if (!folderLink) {
@@ -1290,6 +1290,8 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
       const data = await res.json();
       if (!res.ok || (!data.folderId && !data.folderLink && !data.FolderLink)) {
         throw new Error(data.error || "No se pudo crear la carpeta en Drive.");
+      } else {
+        clientFolderLink = data.folderLink;
       }
 
       folderId = data.folderId || null;
@@ -1313,6 +1315,7 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
     await new Promise(resolve => setTimeout(resolve, 3000));
     return;
   }
+  
 
   // 2. Subir archivos a la carpeta creada
   showStatus("Subiendo archivos...", "info");
@@ -1443,7 +1446,8 @@ async function onSubmit(e) {
       archivos: filesToUpload.length
     });
 
-
+    data.folderLink = clientFolderLink
+    
     // Enviar datos del formulario
     showStatus("Enviando datos del formulario...", "info");
     const sheetResult = await sendFormDataToSheets(data);
