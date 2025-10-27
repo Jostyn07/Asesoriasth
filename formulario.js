@@ -1284,6 +1284,7 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
   let folderId = null;
   let folderLink = existingFolderLink || null;
   let clientFolderLink = '';
+
   try {
     const folderName = folderNameFromSheets;
     if (!folderLink) {
@@ -1298,16 +1299,16 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
       const data = await res.json();
       if (!res.ok || (!data.folderId && !data.folderLink && !data.FolderLink)) {
         throw new Error(data.error || "No se pudo crear la carpeta en Drive.");
-      } else {
-        clientFolderLink = data.folderLink;
-        window.lasfolderId = folderData.folderId
       }
-      data.folderLink = clientFolderLink
+
       folderId = data.folderId || null;
       folderLink = data.folderLink || data.FolderLink || null;
 
       // Si el backend no devolvió link pero sí folderId, construir link estándar de Drive
       if (!folderLink && folderId) folderLink = `https://drive.google.com/drive/folders/${folderId}`;
+    
+    createdFolderLink = folderLink || '';
+    if (folderId) window.lastFolderId = folderId; 
     } else {
       // intentar extraer folderId desde el link si es posible
       const match = String(folderLink).match(/folders\/([a-zA-Z0-9_\-]+)/);
@@ -1351,19 +1352,24 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
     showStatus("✅ Archivos subidos a Drive correctamente.", "success");
     await new Promise(resolve => setTimeout(resolve, 1500));
 
+    const returnedFolderLink = result.folderLink || result.folderlink || result.folder || '';
+    const finalFolderLink = returnedFolderLink || folderLink || createdFolderLink;
+
     // Intentar guardar el folderLink en la "nube" (backend/Sheets)
-    if (clientId && folderLink) {
+    if (clientId && finalFolderLink) {
       try {
-        await saveFolderLinkToBackend(clientId, folderLink);
+        await saveFolderLinkToBackend(clientId, finalFolderLink);
       } catch (err) {
         console.warn("No se pudo guardar folderLink via backend:", err);
       }
     }
 
+    return { fileLinks: result.fileLinks || [], folderLink: finalFolderLink || null };
   } catch (error) {
     showStatus("Ocurrió un error al procesar tu solicitud: " + error.message, "error");
     console.error("Error subiendo archivos:", error);
     await new Promise(resolve => setTimeout(resolve, 3000));
+    return null;
   }
 }
 
@@ -1473,6 +1479,7 @@ async function onSubmit(e) {
     if (filesToUpload.length > 0) {
       showStatus("Enviando archivos...", "info");
       await uploadFilesToBackend(filesToUpload, folderName, clientId, folderLinkFromResult, clientFolderLink);
+      console.log('Resultado:', uploadResult);
     }
 
     // Eliminar borrador guardado
