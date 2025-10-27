@@ -1283,7 +1283,6 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
 
   let folderId = null;
   let folderLink = existingFolderLink || null;
-  let clientFolderLink = '';
 
   try {
     const folderName = folderNameFromSheets;
