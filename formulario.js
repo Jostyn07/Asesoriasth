@@ -1476,7 +1476,7 @@ async function onSubmit(e) {
     // Subir archivos si hay; pasar clientId y posible folderLink que backend haya devuelto
     if (filesToUpload.length > 0) {
       showStatus("Enviando archivos...", "info");
-      await uploadFilesToBackend(filesToUpload, folderName, clientId, folderLinkFromResult, clientFolderLink);
+      await uploadFilesToBackend(filesToUpload, folderName, clientId, folderLinkFromResult);
       console.log('Resultado:', uploadResult);
     }
 
