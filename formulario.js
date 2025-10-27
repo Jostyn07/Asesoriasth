@@ -1292,8 +1292,9 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
         throw new Error(data.error || "No se pudo crear la carpeta en Drive.");
       } else {
         clientFolderLink = data.folderLink;
+        window.lasfolderId = folderData.folderId
       }
-
+      data.folderLink = clientFolderLink
       folderId = data.folderId || null;
       folderLink = data.folderLink || data.FolderLink || null;
 
@@ -1446,8 +1447,7 @@ async function onSubmit(e) {
       archivos: filesToUpload.length
     });
 
-    data.folderLink = clientFolderLink
-    
+ 
     // Enviar datos del formulario
     showStatus("Enviando datos del formulario...", "info");
     const sheetResult = await sendFormDataToSheets(data);
@@ -1460,10 +1460,11 @@ async function onSubmit(e) {
     // Guardar datos para upload de archivos
     window.lastFormData = data;
 
+    clientFolderLink = '';
     // Subir archivos si hay; pasar clientId y posible folderLink que backend haya devuelto
     if (filesToUpload.length > 0) {
       showStatus("Enviando archivos...", "info");
-      await uploadFilesToBackend(filesToUpload, folderName, clientId, folderLinkFromResult);
+      await uploadFilesToBackend(filesToUpload, folderName, clientId, folderLinkFromResult, clientFolderLink);
     }
 
     // Eliminar borrador guardado
@@ -1744,12 +1745,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     actions.className = "grid-item full-width button-dependent-section";
     actions.innerHTML = `
           <button type="button" id="addDependent" class="btn btn-primary">Añadir otro</button>
-          <button type="button" id="saveDependentsBtn" class="btn btn-success">Guardar</button>
       `;
     modalBody.appendChild(actions);
   }
   if ($("#addDependent")) $("#addDependent").addEventListener("click", () => addDependentField());
-  if ($("#saveDependentsBtn")) $("#saveDependentsBtn").addEventListener("click", saveDependentsData);
 
   if (container) {
     container.addEventListener("click", (e) => {
