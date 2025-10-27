@@ -576,6 +576,7 @@ function updateDependentsCount() {
   if (!cant || !container) return;
   cant.value = String(container.querySelectorAll(".dependent-item-formal").length);
 }
+const estadoMigratorio = card.querySelector(`.dependent-estado-migratorio`)?.value || "";
 
 function saveDependentsData() {
   const container = $("#modalDependentsContainer");
@@ -583,6 +584,7 @@ function saveDependentsData() {
   const items = container.querySelectorAll(".dependent-item-formal");
   const data = [];
   let ok = true;
+  const estadoMigratorio = card.querySelector(`.dependent-estado-migratorio`)?.value || "";
 
   items.forEach((card, i) => {
     const nombre = card.querySelector(".dependent-nombre")?.value.trim();
