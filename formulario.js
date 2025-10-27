@@ -1473,7 +1473,6 @@ async function onSubmit(e) {
     // Guardar datos para upload de archivos
     window.lastFormData = data;
 
-    clientFolderLink = '';
     // Subir archivos si hay; pasar clientId y posible folderLink que backend haya devuelto
     if (filesToUpload.length > 0) {
       showStatus("Enviando archivos...", "info");
