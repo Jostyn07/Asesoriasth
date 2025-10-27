@@ -178,7 +178,7 @@ function signOut() {
   localStorage.removeItem('userInfo');
   localStorage.removeItem('sessionActive');
   localStorage.removeItem('msAccessToken');
-  localStorage.removeItem('dependentsDraft');
+  // localStorage.removeItem('dependentsDraft');
 
   showStatus("Has cerrado sesión.", "success");
 
@@ -576,7 +576,6 @@ function updateDependentsCount() {
   if (!cant || !container) return;
   cant.value = String(container.querySelectorAll(".dependent-item-formal").length);
 }
-const estadoMigratorio = card.querySelector(`.dependent-estado-migratorio`)?.value || "";
 
 function saveDependentsData() {
   const container = $("#modalDependentsContainer");
@@ -584,7 +583,6 @@ function saveDependentsData() {
   const items = container.querySelectorAll(".dependent-item-formal");
   const data = [];
   let ok = true;
-  const estadoMigratorio = card.querySelector(`.dependent-estado-migratorio`)?.value || "";
 
   items.forEach((card, i) => {
     const nombre = card.querySelector(".dependent-nombre")?.value.trim();
@@ -738,6 +736,14 @@ function addDependentField(existingData = null) {
     </div>
   `;
   container.appendChild(card);
+
+  if (d.estadoMigratorio) {
+  const estadoEl = card.querySelector('.dependent-estado-migratorio');
+  if (estadoEl) {
+    estadoEl.value = d.estadoMigratorio;
+  }
+}
+
   setupDependentValidation(card);
   updateDependentNumbers();
   updateDependentsCount();
@@ -1747,10 +1753,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     actions.className = "grid-item full-width button-dependent-section";
     actions.innerHTML = `
           <button type="button" id="addDependent" class="btn btn-primary">Añadir otro</button>
+          <button type="button" id="saveDependentsBtn" class="btn btn-success">Guardar</button>
       `;
     modalBody.appendChild(actions);
   }
   if ($("#addDependent")) $("#addDependent").addEventListener("click", () => addDependentField());
+  if ($("#saveDependentsBtn")) $("#saveDependentsBtn").addEventListener("click", saveDependentsData);
 
   if (container) {
     container.addEventListener("click", (e) => {
