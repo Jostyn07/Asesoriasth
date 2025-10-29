@@ -1850,8 +1850,13 @@ async function saveDraft() {
     data.cignaPlans = collectAllCignaPlansWithDynamicFields();
     
     // Agregar timestamp e ID
+    let currentDraftId = localStorage.getItem('currentDraftId');
+    if (!currentDraftId) {
+      currentDraftId = `DRAFT-${Date.now()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+      localStorage.setItem('currentDraftId', currentDraftId);
+    }
     data.draftTimestamp = new Date().toISOString();
-    data.draftId = `DRAFT-${Date.now()}-${Math.random().toString(36).slice(2,8).toUpperCase()}`;
+    data.draftId = currentDraftId;
     
     console.log('📋 Datos recolectados:', {
       id: data.draftId,
@@ -1871,7 +1876,11 @@ async function saveDraft() {
     localStorage.setItem('formDraft', JSON.stringify(data));
     console.log('✅ Borrador guardado en localStorage');
     showStatus('Guardado localmente', 'success')
+
+    const backendResult = await sendDraftToSheets(data);
     
+    showStatus(`Borrador guardado. Estado: ${backendResult.message}`, 'success');Audio
+
   } catch (error) {
     console.error('❌ Error guardando borrador:', error);
     showStatus('❌ Error crítico: No se pudo guardar el borrador', 'error');
@@ -2185,6 +2194,7 @@ function deleteDraft() {
   
   if (confirmDelete) {
     localStorage.removeItem('formDraft');
+    localStorage.removeItem('currentDraftId');
     showStatus('🗑️ Borrador eliminado', 'info');
     console.log('🗑️ Borrador eliminado');
   }
