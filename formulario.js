@@ -378,6 +378,7 @@ function validateObamacareFields() {
   if (document.getElementById('estadoMigratorio').value === 'Ciudadano') {
     requiredFields['#SSN'] = 'El campo SSN es obligatorio';
   }
+  requiredFields['#tipoVenta'] = 'El campo email es obligatorio';
   requiredFields['#email'] = 'El campo email es obligatorio';
   requiredFields['#telefono'] = 'El campo teléfono es obligatorio';
   requiredFields['#ingresos'] = 'El campo ingresos es obligatorio';
@@ -1246,7 +1247,7 @@ function validateClientData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "https://asesoriasth-backend-88xb.onrender.com"; // Cambia esto a tu URL real
+const BACKEND_URL = "https://asesoriasth-backend.onrender.com"; // Cambia esto a tu URL real
 
 async function sendFormDataToSheets(data) {
   console.log("Enviando datos al Backend...", data);
