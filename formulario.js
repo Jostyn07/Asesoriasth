@@ -1518,7 +1518,7 @@ async function clearAllDraftsAfterSubmit(clientId) {
       console.log("✅ Borrador local eliminado");
     }
     // Marcar el borrador en Sheets como enviado
-    await markDraftsAsSentInSheets(clientId);
+    // await markDraftsAsSentInSheets(clientId);
 
     // Limpiar auto-guardado
     if (window.autoSaveInterval) {
@@ -1537,86 +1537,86 @@ async function clearAllDraftsAfterSubmit(clientId) {
   }
 }
 
-async function markDraftsAsSentInSheets(clientId) {
-  console.log('📝 Marcando borradores como enviados en Sheets...');
+// async function markDraftsAsSentInSheets(clientId) {
+//   console.log('📝 Marcando borradores como enviados en Sheets...');
   
-  try {
-    // Obtener todos los borradores actuales
-    const draftsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Borrador!A:S`;
+//   try {
+//     // Obtener todos los borradores actuales
+//     const draftsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/Borrador!A:S`;
     
-    const response = await authenticatedFetch(draftsUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+//     const response = await authenticatedFetch(draftsUrl, {
+//       method: "GET",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//     });
 
-    if (!response.ok) {
-      console.log('⚠️ No se pudo acceder a la hoja de borradores');
-      return;
-    }
+//     if (!response.ok) {
+//       console.log('⚠️ No se pudo acceder a la hoja de borradores');
+//       return;
+//     }
 
-    const result = await response.json();
-    const rows = result.values || [];
+//     const result = await response.json();
+//     const rows = result.values || [];
 
-    if (rows.length <= 1) { // Solo encabezados o vacío
-      console.log('ℹ️ No hay borradores para marcar');
-      return;
-    }
+//     if (rows.length <= 1) { // Solo encabezados o vacío
+//       console.log('ℹ️ No hay borradores para marcar');
+//       return;
+//     }
 
-    // Buscar borradores activos y marcarlos como enviados
-    const updates = [];
+//     // Buscar borradores activos y marcarlos como enviados
+//     const updates = [];
     
-    for (let i = 1; i < rows.length; i++) { // Empezar desde 1 para saltar encabezados
-      const row = rows[i];
-      const estado = row[18]; // Columna S (Estado)
+//     for (let i = 1; i < rows.length; i++) { // Empezar desde 1 para saltar encabezados
+//       const row = rows[i];
+//       const estado = row[18]; // Columna S (Estado)
       
-      // Si el borrador está "Activo", marcarlo como "Enviado"
-      if (estado === 'Activo') {
-        const rowIndex = i + 1; // +1 porque las filas de Sheets empiezan en 1
-        updates.push({
-          range: `Borrador!S${rowIndex}`,
-          values: [['Enviado']]
-        });
+//       // Si el borrador está "Activo", marcarlo como "Enviado"
+//       if (estado === 'Activo') {
+//         const rowIndex = i + 1; // +1 porque las filas de Sheets empiezan en 1
+//         updates.push({
+//           range: `Borrador!S${rowIndex}`,
+//           values: [['Enviado']]
+//         });
         
-        // También actualizar con información del envío
-        const timestampRange = `Borrador!T${rowIndex}`;
-        updates.push({
-          range: timestampRange,
-          values: [[`Enviado: ${new Date().toLocaleString('es-ES')} | Client ID: ${clientId}`]]
-        });
-      }
-    }
+//         // También actualizar con información del envío
+//         const timestampRange = `Borrador!T${rowIndex}`;
+//         updates.push({
+//           range: timestampRange,
+//           values: [[`Enviado: ${new Date().toLocaleString('es-ES')} | Client ID: ${clientId}`]]
+//         });
+//       }
+//     }
 
-    // Aplicar actualizaciones en lote si hay alguna
-    if (updates.length > 0) {
-      const batchUpdateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
+//     // Aplicar actualizaciones en lote si hay alguna
+//     if (updates.length > 0) {
+//       const batchUpdateUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values:batchUpdate`;
       
-      const batchUpdateResponse = await authenticatedFetch(batchUpdateUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          valueInputOption: "USER_ENTERED",
-          data: updates
-        }),
-      });
+//       const batchUpdateResponse = await authenticatedFetch(batchUpdateUrl, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({
+//           valueInputOption: "USER_ENTERED",
+//           data: updates
+//         }),
+//       });
 
-      if (batchUpdateResponse.ok) {
-        console.log(`✅ ${updates.length / 2} borradores marcados como enviados en Sheets`);
-      } else {
-        console.log('⚠️ Error marcando borradores en Sheets');
-      }
-    } else {
-      console.log('ℹ️ No hay borradores activos para marcar');
-    }
+//       if (batchUpdateResponse.ok) {
+//         console.log(`✅ ${updates.length / 2} borradores marcados como enviados en Sheets`);
+//       } else {
+//         console.log('⚠️ Error marcando borradores en Sheets');
+//       }
+//     } else {
+//       console.log('ℹ️ No hay borradores activos para marcar');
+//     }
 
-  } catch (error) {
-    console.error('⚠️ Error marcando borradores como enviados:', error);
-    // No lanzar error para no interrumpir el flujo principal
-  }
-}
+//   } catch (error) {
+//     console.error('⚠️ Error marcando borradores como enviados:', error);
+//     // No lanzar error para no interrumpir el flujo principal
+//   }
+// }
 
 // AGREGAR función para resetear el formulario:
 function resetFormState() {
@@ -1875,6 +1875,36 @@ async function saveDraft() {
   } catch (error) {
     console.error('❌ Error guardando borrador:', error);
     showStatus('❌ Error crítico: No se pudo guardar el borrador', 'error');
+  }
+}
+
+async function sendDraftToSheets(data) {
+  console.log('📤 Enviando borrador al Backend (Service Account)...');
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/drafts/save`, { // <-- Llama al nuevo endpoint
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data), // Enviar el JSON completo del borrador
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('❌ Error del backend al guardar borrador:', result.error);
+      throw new Error(result.error || `Error al guardar borrador. Código: ${response.status}`);
+    }
+
+    console.log('✅ Borrador guardado exitosamente por el Backend');
+    return result;
+
+  } catch (error) {
+    console.error('❌ Error detallado en sendDraftToSheets (migrado):', error);
+    
+    // Si el fallo es del backend, se muestra al usuario.
+    throw new Error(`Error al guardar borrador: ${error.message}. (Guárdelo localmente como respaldo).`);
   }
 }
 
