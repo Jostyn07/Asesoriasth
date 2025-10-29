@@ -381,8 +381,8 @@ function validateObamacareFields() {
   requiredFields['#email'] = 'El campo email es obligatorio';
   requiredFields['#telefono'] = 'El campo teléfono es obligatorio';
   requiredFields['#ingresos'] = 'El campo ingresos es obligatorio';
-  requiredFields['nacionalidad'] = 'El campo nacionalidad es obligatorio';
-  requiredFields['ocupacion'] = 'El campo ocupación es obligatorio';
+  requiredFields['#nacionalidad'] = 'El campo nacionalidad es obligatorio';
+  requiredFields['#ocupacion'] = 'El campo ocupación es obligatorio';
   return validateFields(requiredFields);
 }
 
@@ -598,12 +598,12 @@ function saveDependentsData() {
       return;
     }
 
-    const aplica = card.querySelector(".dependent-aplica")?.value || "";
-    if (!nombre || !apellido || !fechaNacimiento || !parentesco || !aplica) {
-      ok = false;
-      alert(`Completa los campos requeridos para el Dependiente #${i+1}.`);
-      return;
-    }
+    // const aplica = card.querySelector(".dependent-aplica")?.value || "";
+    // if (!nombre || !apellido || !fechaNacimiento || !parentesco || !aplica) {
+    //   ok = false;
+    //   alert(`Completa los campos requeridos para el Dependiente #${i+1}.`);
+    //   return;
+    // }
     data.push({
       nombre,
       apellido,
