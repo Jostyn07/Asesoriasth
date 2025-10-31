@@ -599,12 +599,7 @@ function saveDependentsData() {
       return;
     }
 
-    // const aplica = card.querySelector(".dependent-aplica")?.value || "";
-    // if (!nombre || !apellido || !fechaNacimiento || !parentesco || !aplica) {
-    //   ok = false;
-    //   alert(`Completa los campos requeridos para el Dependiente #${i+1}.`);
-    //   return;
-    // }
+    const aplica = card.querySelector(".dependent-aplica")?.value || "";
     data.push({
       nombre,
       apellido,
