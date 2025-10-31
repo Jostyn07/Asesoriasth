@@ -1792,19 +1792,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupAutoSave();
   console.log('✅ Auto-guardado configurado');
 
-  const modalBody = modal?.querySelector(".modal-body");
-  if (modalBody && !modalBody.querySelector("#addDependent") && !modalBody.querySelector("#saveDependentsBtn")) {
-    const actions = document.createElement("div");
-    actions.className = "grid-item full-width button-dependent-section";
-    actions.innerHTML = `
-          <button type="button" id="addDependent" class="btn btn-primary">Añadir otro</button>
-          <button type="button" id="saveDependentsBtn" class="btn btn-success">Guardar</button>
-      `;
-    modalBody.appendChild(actions);
-  }
-  if ($("#addDependent")) $("#addDependent").addEventListener("click", () => addDependentField());
-  if ($("#saveDependentsBtn")) $("#saveDependentsBtn").addEventListener("click", saveDependentsData);
-
   if (container) {
     container.addEventListener("click", (e) => {
       const btn = e.target.closest(".btn-remove-dependent");
