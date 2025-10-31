@@ -633,7 +633,7 @@ function saveDependentsDraft() {
     });
   });
   window.currentDependentsData = data;
-  localStorage.setItem('dependentDraft', JSON.stringify(data));
+  localStorage.setItem('dependentsDraft', JSON.stringify(data));
   updateDependentsCount();
 }
 
@@ -811,16 +811,6 @@ function ensureDependentsCards(n) {
   updateDependentsCount();
 }
 
-function updateDependentNumbers() {
-  const container = $("#modalDependentsContainer");
-  if (!container) return;
-  container.querySelectorAll(".dependent-item-formal").forEach((it, i) => {
-    it.setAttribute("data-index", i);
-    it.querySelector(".dependent-number").textContent = i + 1;
-    it.querySelector("h4").textContent = `Dependiente ${i + 1}`;
-  });
-}
-
 function setupDependentValidation(card) {
   card.querySelectorAll(".form-input-formal[required]").forEach((el) => {
     el.addEventListener("input", () => {
@@ -837,19 +827,6 @@ function setupDependentValidation(card) {
       else e.target.value = `${v.slice(0, 3)}-${v.slice(3, 5)}-${v.slice(5)}`;
     });
   }
-}
-
-function ensureDependentsCards(n) {
-  const container = $("#modalDependentsContainer");
-  if (!container) return;
-  const cur = container.querySelectorAll(".dependent-item-formal").length;
-  if (n > cur) {
-    for (let i = cur; i < n; i++) addDependentField();
-  } else if (n < cur) {
-    const items = Array.from(container.querySelectorAll(".dependent-item-formal")).reverse();
-    for (let i = 0; i < cur - n && items[i]; i++) removeDependentField(items[i]);
-  }
-  updateDependentsCount();
 }
 
 // ================================ PO Box ==================================
@@ -1820,13 +1797,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const closeBtn = $("#closeDependentsModal");
   const modal = $("#dependentsModal");
 
-  if (addBtn) addBtn.addEventListener("click", openDependentsModal);
-  if (editBtn) editBtn.addEventListener("click", openDependentsModal);
-  if (closeBtn) closeBtn.addEventListener("click", closeDependentsModal);
-  if (modal) modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeDependentsModal();
-  });
-
   const modalBody = modal?.querySelector(".modal-body");
   if (modalBody && !modalBody.querySelector("#addDependent") && !modalBody.querySelector("#saveDependentsBtn")) {
     const actions = document.createElement("div");
@@ -1849,7 +1819,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (cantidad) {
     cantidad.addEventListener("change", () => {
       const n = Math.max(0, parseInt(cantidad.value || "0", 10) || 0);
-      const container = document.getElementById("modalDependentsContainer");
       if (n === 0) {
         // Elimina todos los dependientes del DOM y del draft
         if (container) container.innerHTML = "";
@@ -1874,18 +1843,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
   }
-function closeDependentsModal() {
-  const modal = $("#dependentsModal");
-  const cantidad = $("#cantidadDependientes");
-  if (modal) modal.style.display = "none";
-  if (cantidad && parseInt(cantidad.value, 10) === 0) {
-    const container = document.getElementById("modalDependentsContainer");
-    if (container) container.innerHTML = "";
-    window.currentDependentsData = [];
-    localStorage.removeItem("dependentsDraft");
-  }
-}
-
   // Configurar evento del formulario principal
   const dataForm = document.getElementById('dataForm');
   if (dataForm) {
