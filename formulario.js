@@ -751,20 +751,6 @@ function removeDependentField(buttonOrCard) {
   saveDependentsDraft(); // Vuelve a guardar el borrador después de eliminar
 }
 
-function removeDependentField(buttonOrCard) {
-  const container = $("#modalDependentsContainer");
-  if (!container) return;
-  const item = buttonOrCard.closest?.(".dependent-item-formal") || buttonOrCard;
-  if (!item) return;
-  if (container.children.length <= 1) {
-    alert("Debe mantener al menos un dependiente en el formulario.");
-    return;
-  }
-  item.remove();
-  updateDependentNumbers();
-  updateDependentsCount();
-}
-
 function loadDependentsFromDraft() {
     const container = $(DEPENDENTS_CONTAINER_ID);
     if (!container) return;
