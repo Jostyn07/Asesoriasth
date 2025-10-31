@@ -116,21 +116,17 @@
                                 <input type="number" id="cantidadDependientes" name="cantidadDependientes" class="form-control" placeholder="Cantidad de dependientes" min="0" step="1" value="0">
                             </div>
                             <div class="grid-item full-width button-dependent-section">
-                                <button type="button" id="addDependentsBtn" class="btn btn-primary">Agregar dependiente</button>
-                                <button type="button" id="editDependentsBtn" class="btn btn-secondary">Editar dependiente</button>
+                                <button type="button" id="addDependentsFieldBtn" class="btn btn-primary">Agregar dependiente</button>
                             </div>
                         </div>
                     </div>
-                    <div id="dependentsModal" class="modal" style="display: none;">
-                        <div class="modal-dialog">
-                            <div class="modal-header">
-                                <h3>Dependientes</h3>
-                                <button type="button" class="close-button btn btn-secondary" id="closeDependentsModal">Cerrar</button>
-                            </div>
 
-                            <div class="modal-body">
-                                <div id="modalDependentsContainer"></div>
+                    <div id="dependentDisplayContainer">
+                        <div id="dependentsList" class="card" style="display: none; margin-top: 20px;">
+                            <div class="card-header">
+                                <h2>Dependientes</h2>
                             </div>
+                            <div class="card-body" id="dependentsContainer"></div>
                         </div>
                     </div>
 
