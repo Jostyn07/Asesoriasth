@@ -13,23 +13,6 @@ const LOGIN_URL = "./index.html";
 const AUTH_SKEW_MS = 30_000; // 30 segundos de margen
 const MAX_RETRIES = 3;
 
-function getAuthState() {
-  const sessionActive = localStorage.getItem('sessionActive');
-  const authProvider = localStorage.getItem('authProvider');
-  const userInfo = localStorage.getItem('userInfo');
-  const tokenExpiry = localStorage.getItem('token_expiry_time');
-
-  return {
-    sessionActive: sessionActive === 'true',
-    authProvider,
-    userInfo: userInfo ? JSON.parse(userInfo) : null,
-    accessToken: authProvider === 'google' ? 
-      localStorage.getItem('google_access_token') :
-      localStorage.getItem('msAccessToken'),
-    tokenExpiry: tokenExpiry ? parseInt(tokenExpiry) : null
-  };
-}
-
 function isTokenValid(skew = AUTH_SKEW_MS) {
   const authState = getAuthState();
 
@@ -535,51 +518,41 @@ function initTabs() {
   if (first) activate(first);
 }
 
-// ========================== Dependientes (modal) ==========================
+// ========================== Dependientes ==========================
 window.currentDependentsData = window.currentDependentsData || [];
+const DEPENDENTS_CONTAINER_ID = "#dependentsContainer";
+const DEPENDENTS_LIST_ID = "#dependentsList";
+// Muestra el contenedor general de los dependes
+function showDependentsList() {
+  const list = $(DEPENDENTS_LIST_ID)
+  if (list) list.style.display = 'block';
+}
 
-function openDependentsModal() {
-  const modal = $("#dependentsModal");
-  const container = $("#modalDependentsContainer");
-  if (!modal || !container) return;
+// Oculta el contenedor general de dependes si no hay ninguno
+function hideDependentsListIfEmpty() {
+  const container = $(DEPENDENTS_CONTAINER_ID);
+  const list = $(DEPENDENTS_LIST_ID);
 
-  //intenta restaurar borrador
-  const draft = localStorage.getItem('dependentsDraft');
-  if (draft) {
-    try {
-      window.currentDependentsData = JSON.parse(draft);
-    } catch (e) {
-      window.currentDependentsData = [];
+  if (container && list) {
+    if (container.children.length === 0) {
+      list.style.display = 'none';
     }
   }
-  container.innerHTML = "";
-  if (window.currentDependentsData.length) {
-    window.currentDependentsData.forEach((d) => addDependentField(d));
-  } else {
-    addDependentField();
-  }
-
-  const desired = parseInt($("#cantidadDependientes")?.value || "0", 10);
-  if (Number.isFinite(desired) && desired >= 0) ensureDependentsCards(desired);
-
-  modal.style.display = "block";
-  updateDependentsCount();
 }
 
-function closeDependentsModal() {
-  const modal = $("#dependentsModal");
-  if (modal) modal.style.display = "none";
-}
-
+// Actualizar el contenedor de dependientes en el input principal
 function updateDependentsCount() {
   const cant = $("#cantidadDependientes");
-  const container = $("#modalDependentsContainer");
+  const container = $(DEPENDENTS_CONTAINER_ID);
   if (!cant || !container) return;
-  cant.value = String(container.querySelectorAll(".dependent-item-formal").length);
+  const count = container.querySelectorAll(".dependent-item-formal").length;
+  cant.value = String(count);
 }
 
+hideDependentsListIfEmpty();
+
 function saveDependentsData() {
-  const container = $("#modalDependentsContainer");
+  const container = $(DEPENDENTS_CONTAINER_ID);
   if (!container) return;
   const items = container.querySelectorAll(".dependent-item-formal");
   const data = [];
@@ -592,14 +565,14 @@ function saveDependentsData() {
     const parentesco = card.querySelector(".dependent-parentesco")?.value || "";
     const ssn = card.querySelector(".dependent-ssn")?.value.trim() || "";
     const estadoMigratorio = card.querySelector(`.dependent-estado-migratorio`)?.value || "";
+    const aplica = card.querySelector(".dependent-aplica")?.value || "";
 
     if (fechaNacimiento && !/^\d{2}\/\d{2}\/\d{4}$/.test(fechaNacimiento)) {
       ok = false;
-      alert(`Formato de fecha incorrecto para Dependiente #${i+1}. Use MM/DD/AAAA.`);
+      showStatus(`Formato de fecha incorrecto para Dependiente #${i+1}. Use MM/DD/AAAA.`, 'error');
       return;
     }
 
-    const aplica = card.querySelector(".dependent-aplica")?.value || "";
     data.push({
       nombre,
       apellido,
@@ -613,14 +586,13 @@ function saveDependentsData() {
   if (!ok) return;
 
   window.currentDependentsData = data;
-  localStorage.setItem('dependentsDraft', JSON.stringify(data)); // <-- Guarda el draft
+  localStorage.setItem('dependentsDraft', JSON.stringify(data));
   updateDependentsCount();
-  closeDependentsModal();
-  showStatus(`✅ ${data.length} dependiente(s) guardado(s)`, "success");
+  showStatus(`${data.length} dependiente(s) actualizado(s)`, "success");
 }
 
 function saveDependentsDraft() {
-  const container = document.getElementById("modalDependentsContainer");
+  const container = $(DEPENDENTS_CONTAINER_ID);
   if (!container) return;
   const items = container.querySelectorAll(".dependent-item-formal");
   const data = [];
@@ -639,14 +611,19 @@ function saveDependentsDraft() {
       fechaNacimiento,
       parentesco,
       ssn,
+      aplica,
       estadoMigratorio
     });
   });
-  localStorage.setItem('dependentsDraft', JSON.stringify(data));
+  window.currentDependentsData = data;
+  localStorage.setItem('dependentDraft', JSON.stringify(data));
+  updateDependentsCount();
 }
+
 function addDependentField(existingData = null) {
-  const container = $("#modalDependentsContainer");
+  const container = $(DEPENDENTS_CONTAINER_ID);
   if (!container) return;
+
   const idx = container.children.length;
   const d = existingData || {
     nombre: "",
@@ -657,38 +634,38 @@ function addDependentField(existingData = null) {
     ssn: "",
     aplica: ""
   };
-
   const card = document.createElement("div");
-  card.className = "dependent-item-formal";
-  card.setAttribute("data-index", idx);
+  card.className = "dependent-item-formal card";
+  card.style.marginBottom = "20px";
+  card.style.border = "1px solid var (--border-color)";
+
   card.innerHTML = `
-    <div class="dependent-header-formal" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--border-color);padding-bottom:10px;">
-      <div class="dependent-title-formal" style="display:flex;gap:10px;align-items:center;">
-        <span class="dependent-number" style="background:var(--primary-color);color:#fff;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;">${idx + 1}</span>
-        <h4 style="margin:0;">Dependiente ${idx + 1}</h4>
-      </div>
-      <button type="button" class="btn-remove-dependent btn btn-secondary">Eliminar</button>
+  <div style="padding: 15px 20px; background: var(--bg-card-header); border-bottom: 1px solid var(--border-color);">
+        <div class="dependent-header-formal" style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="dependent-title-formal" style="display:flex;gap:10px;align-items:center;">
+            <span class="dependent-number" style="background:var(--primary-color);color:#fff;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;">${idx + 1}</span>
+            <h4 style="margin:0; font-size: 1.2rem;">Dependiente ${idx + 1}</h4>
+          </div>
+          <button type="button" class="btn-remove-dependent btn btn-secondary" style="padding: 8px 16px;">Eliminar</button>
+        </div>
     </div>
+    <div style="padding: 20px;" class="form-grid">
+      <div class="grid-item">
+        <label class="form-label">Nombre <span class="required-asterisk">*</span></label>
+        <input type="text" class="form-input-formal dependent-nombre form-control" name="NombreDependiente_${idx}" value="${d.nombre}" required>
+      </div>
+      <div class="grid-item">
+        <label class="form-label">Apellido <span class="required-asterisk">*</span></label>
+        <input type="text" class="form-input-formal dependent-apellido form-control" name="ApellidoDependiente_${idx}" value="${d.apellido}" required>
+      </div>
 
-    <div class="dependent-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
-      <div class="form-group-formal">
-        <label class="form-label-formal">Nombre <span class="required-asterisk">*</span></label>
-        <input type="text" class="form-input-formal dependent-nombre form-control" name="NombreDependiente" value="${d.nombre}" required>
+      <div class="grid-item">
+        <label class="form-label">Fecha de Nacimiento (mm/dd/aaaa) <span class="required-asterisk">*</span></label>
+        <input type="text" class="form-input-formal dependent-fecha form-control" name="FechaNacimientoDependiente_${idx}" value="${d.fechaNacimiento}" placeholder="mm/dd/aaaa" maxlength="10" required>
       </div>
-      <div class="form-group-formal">
-        <label class="form-label-formal">Apellido <span class="required-asterisk">*</span></label>
-        <input type="text" class="form-input-formal dependent-apellido form-control" name="ApellidoDependiente" value="${d.apellido}" required>
-      </div>
-    </div>
-
-    <div class="dependent-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px;">
-      <div class="form-group-formal">
-        <label class="form-label-formal">Fecha de Nacimiento (mm/dd/aaaa) <span class="required-asterisk">*</span></label>
-        <input type="text" class="form-input-formal dependent-fecha form-control" name="FechaNacimientoDependiente" value="${d.fechaNacimiento}" placeholder="mm/dd/aaaa" maxlength="10" required>
-      </div>
-      <div class="form-group-formal">
-        <label class="form-label-formal">Parentesco <span class="required-asterisk">*</span></label>
-        <select class="form-input-formal dependent-parentesco form-select" name="ParentescoDependiente" required>
+      <div class="grid-item">
+        <label class="form-label">Parentesco <span class="required-asterisk">*</span></label>
+        <select class="form-input-formal dependent-parentesco form-select" name="ParentescoDependiente_${idx}" required>
           <option value="">Seleccione el parentesco...</option>
           <option value="Cónyuge" ${d.parentesco === "Cónyuge" ? "selected" : ""}>Cónyuge</option>
           <option value="Hijo" ${d.parentesco === "Hijo" ? "selected" : ""}>Hijo</option>
@@ -702,52 +679,59 @@ function addDependentField(existingData = null) {
           <option value="Otro" ${d.parentesco === "Otro" ? "selected" : ""}>Otro</option>
         </select>
       </div>
+
       <div class="grid-item">
-        <label for="estadoMigratorio" class="form-label">Estado migratorio:</label>
-        <select name="estadoMigratorio" class="form-select dependent-estado-migratorio">
+        <label class="form-label">Estado migratorio:</label>
+        <select name="estadoMigratorio_${idx}" class="form-select dependent-estado-migratorio">
           <option value="">Selecciona...</option>
-          <option value="Ciudadano">Ciudadano</option>
-          <option value="Residente Permanente">Residente Permanente</option>
-          <option value="Permiso de trabajo">Permiso de trabajo</option>
-          <option value="Asilo politico">Asilo politico</option>
-          <option value="I-94">I-94</option>
-          <option value="Otro">Otro</option>
+          <option value="Ciudadano" ${d.estadoMigratorio === "Ciudadano" ? "selected" : ""}>Ciudadano</option>
+          <option value="Residente Permanente" ${d.estadoMigratorio === "Residente Permanente" ? "selected" : ""}>Residente Permanente</option>
+          <option value="Permiso de trabajo" ${d.estadoMigratorio === "Permiso de trabajo" ? "selected" : ""}>Permiso de trabajo</option>
+          <option value="Asilo politico" ${d.estadoMigratorio === "Asilo politico" ? "selected" : ""}>Asilo politico</option>
+          <option value="I-94" ${d.estadoMigratorio === "I-94" ? "selected" : ""}>I-94</option>
+          <option value="Otro" ${d.estadoMigratorio === "Otro" ? "selected" : ""}>Otro</option>
         </select>  
       </div>
-    </div>
-
-    <div class="dependent-form-grid-full" style="margin-bottom:12px;">
-      <div class="form-group-formal">
-        <label class="form-label-formal">Número de Seguro Social (SSN)</label>
-        <input type="text" class="form-input-formal dependent-ssn form-control" name="SSNDependiente" value="${d.ssn}" placeholder="###-##-####" maxlength="11">
+      <div class="grid-item">
+        <label class="form-label">Número de Seguro Social (SSN)</label>
+        <input type="text" class="form-input-formal dependent-ssn form-control" name="SSNDependiente_${idx}" value="${d.ssn}" placeholder="###-##-####" maxlength="11">
       </div>
-    </div>
-    <div class="form-group-formal">
-      <label class="form-label-formal">Aplica? <span class="required-asterisk">*</span></label>
-      <select class="form-input-formal dependent-aplica form-select" name="AplicaDependiente" required>
-        <option value="" ${d.aplica ? "selected" : ""}>Seleccione...</option>
-        <option value="Si" ${d.aplica === "Si" ? "selected" : ""}>Sí</option>
-        <option value="No" ${d.aplica === "No" ? "selected" : ""}>No</option>
-      </select>
+
+      <div class="grid-item full-width">
+        <label class="form-label">Aplica? <span class="required-asterisk">*</span></label>
+        <select class="form-input-formal dependent-aplica form-select" name="AplicaDependiente_${idx}" required>
+          <option value="">Seleccione...</option>
+          <option value="Si" ${d.aplica === "Si" ? "selected" : ""}>Sí</option>
+          <option value="No" ${d.aplica === "No" ? "selected" : ""}>No</option>
+        </select>
+      </div>
     </div>
   `;
   container.appendChild(card);
 
-  if (d.estadoMigratorio) {
-  const estadoEl = card.querySelector('.dependent-estado-migratorio');
-  if (estadoEl) {
-    estadoEl.value = d.estadoMigratorio;
-  }
-}
-
+  attachDateInputMask(card.querySelector(".dependent-fecha"));
   setupDependentValidation(card);
-  updateDependentNumbers();
-  updateDependentsCount();
 
   card.querySelectorAll("input, select").forEach(el => {
     el.addEventListener("input", saveDependentsDraft);
     el.addEventListener("change", saveDependentsDraft);
   });
+  updateDependentNumbers();
+  updateDependentsCount();
+  showDependentsList();
+}
+
+function removeDependentField(buttonOrCard) {
+  const container = $(DEPENDENTS_CONTAINER_ID);
+  if (!container) return;
+  const item = buttonOrCard.closest?.(".dependent-item-formal") || buttonOrCard;
+  if (!item) return;
+
+  // Si se permite eliminar el último, solo se necesita actualizar el conteo a 0
+  item.remove();
+  updateDependentNumbers();
+  updateDependentsCount();
+  saveDependentsDraft(); // Vuelve a guardar el borrador después de eliminar
 }
 
 function removeDependentField(buttonOrCard) {
@@ -761,6 +745,66 @@ function removeDependentField(buttonOrCard) {
   }
   item.remove();
   updateDependentNumbers();
+  updateDependentsCount();
+}
+
+function loadDependentsFromDraft() {
+    const container = $(DEPENDENTS_CONTAINER_ID);
+    if (!container) return;
+    
+    // Intenta restaurar borrador
+    const draft = localStorage.getItem('dependentsDraft');
+    if (draft) {
+        try {
+            window.currentDependentsData = JSON.parse(draft);
+        } catch (e) {
+            window.currentDependentsData = [];
+        }
+    }
+
+    
+    
+    // Siempre iniciar limpio en el DOM
+    container.innerHTML = "";
+    
+    // Cargar y dibujar los dependientes del borrador
+    if (window.currentDependentsData.length > 0) {
+        window.currentDependentsData.forEach((d) => addDependentField(d));
+    } else {
+        // Asegurar que el contador esté en 0
+        $("#cantidadDependientes").value = "0";
+    }
+    
+    hideDependentsListIfEmpty();
+    console.log(`✅ ${window.currentDependentsData.length} dependiente(s) cargado(s) desde borrador.`);
+}
+
+function updateDependentNumbers() {
+  const container = $(DEPENDENTS_CONTAINER_ID);
+  if (!container) return;
+  container.querySelectorAll(".dependent-item-formal").forEach((it, i) => {
+    it.setAttribute("data-index", i);
+    it.querySelector(".dependent-number").textContent = i + 1;
+    it.querySelector("h4").textContent = `Dependiente ${i + 1}`;
+    
+    // Actualizar los atributos name para mantener unicidad en el DOM
+    it.querySelectorAll("[name]").forEach(el => {
+        const originalName = el.name.replace(/_\d+$/, ''); // Eliminar el sufijo numérico si existe
+        el.name = `${originalName}_${i}`;
+    });
+  });
+}
+
+function ensureDependentsCards(n) {
+  const container = $(DEPENDENTS_CONTAINER_ID);
+  if (!container) return;
+  const cur = container.querySelectorAll(".dependent-item-formal").length;
+  if (n > cur) {
+    for (let i = cur; i < n; i++) addDependentField();
+  } else if (n < cur) {
+    const items = Array.from(container.querySelectorAll(".dependent-item-formal")).reverse();
+    for (let i = 0; i < cur - n && items[i]; i++) removeDependentField(items[i]);
+  }
   updateDependentsCount();
 }
 
@@ -1676,23 +1720,7 @@ function resetFormState() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log('🚀 Iniciando aplicación...');
   
-  try {
-    // Verificar autenticación inicial
-    const isAuthenticated = await ensureAuthenticated({interactive: true});
-    if (!isAuthenticated) {
-      console.log('❌ Usuario no autenticado, redirigiendo...');
-      return;
-    }
-    
-    console.log('✅ Usuario autenticado correctamente');
-    
-    // Configurar verificación periódica (cada 10 minutos en lugar de cada minuto)    
-  } catch (error) {
-    console.error('❌ Error crítico en inicialización:', error);
-    promptAndRedirectToLogin("Error iniciando aplicación. Por favor, inicia sesión nuevamente.");
-    return;
-  }
-  
+ 
   // Resto de la inicialización...
   localStorage.removeItem('dependentsDraft');
   addSignOutButton();
@@ -1715,6 +1743,40 @@ document.addEventListener("DOMContentLoaded", async () => {
   initCignaPlans();
   attachDateInputMask('#fechaNacimiento');
 
+  loadDependentsFromDraft();
+  const addDependentBtn = $("#addDependentFieldBtn");
+  const container = $(DEPENDENTS_CONTAINER_ID);
+  const cantidad = $("#cantidadDependientes");
+
+  if (addDependentBtn) {
+    addDependentBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      addDependentField();
+    });
+  }
+
+  if (container) {
+    container.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-remove-dependent");
+      if (btn) removeDependentField(btn);
+    });
+  }
+
+  if (cantidad) {
+    cantidad.addEventListener("change", () => {
+      const n = Math.max(0, parseInt(cantidad.value || "0, 10") || 0);
+      ensureDependentsCards(n);
+      saveDependentsDraft();
+    });
+  }
+
+  if (container) {
+    container.addEventListener('input', (e) => {
+      if (e.target.closest('.dependent-item-formal')) {
+        saveDependentsDraft();
+      }
+    });
+  }
   // ===== Configurar botones de borrador =====
   const saveDraftBtn = document.getElementById('saveDraftBtn');
   if (saveDraftBtn) {
@@ -1738,8 +1800,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const editBtn = $("#editDependentsBtn");
   const closeBtn = $("#closeDependentsModal");
   const modal = $("#dependentsModal");
-  const container = $("#modalDependentsContainer");
-  const cantidad = $("#cantidadDependientes");
 
   if (addBtn) addBtn.addEventListener("click", openDependentsModal);
   if (editBtn) editBtn.addEventListener("click", openDependentsModal);
