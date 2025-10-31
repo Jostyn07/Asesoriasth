@@ -926,8 +926,7 @@ function attachCurrencyFormatting() {
 }
 
 // Lógica de máscara de fecha para el formato mm/dd/aaaa
-function attachDateInputMask(selector) {
-  const el = $(selector);
+function attachDateInputMask(el) {
   if (!el) return;
   el.addEventListener('input', function(e) {
       let value = e.target.value.replace(/\D/g, '');
@@ -1737,7 +1736,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   attachCurrencyFormatting();
   initUploads();
   initCignaPlans();
-  attachDateInputMask('#fechaNacimiento');
+  const titularFechaNac = $('#fechaNacimiento');
+  if( titularFechaNac) {
+    attachDateInputMask(titularFechaNac)
+  }
 
   loadDependentsFromDraft();
   const addDependentBtn = $("#addDependentFieldBtn");
