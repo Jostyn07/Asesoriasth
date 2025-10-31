@@ -13,6 +13,23 @@ const LOGIN_URL = "./index.html";
 const AUTH_SKEW_MS = 30_000; // 30 segundos de margen
 const MAX_RETRIES = 3;
 
+function getAuthState() {
+  const sessionActive = localStorage.getItem('sessionActive');
+  const authProvider = localStorage.getItem('authProvider');
+  const userInfo = localStorage.getItem('userInfo');
+  const tokenExpiry = localStorage.getItem('token_expiry_time');
+
+  return {
+    sessionActive: sessionActive === 'true',
+    authProvider,
+    userInfo: userInfo ? JSON.parse(userInfo) : null,
+    accessToken: authProvider === 'google' ? 
+      localStorage.getItem('google_access_token') :
+      localStorage.getItem('msAccessToken'),
+    tokenExpiry: tokenExpiry ? parseInt(tokenExpiry) : null
+  };
+}
+
 function isTokenValid(skew = AUTH_SKEW_MS) {
   const authState = getAuthState();
 
@@ -1720,6 +1737,22 @@ function resetFormState() {
 document.addEventListener("DOMContentLoaded", async () => {
   console.log('🚀 Iniciando aplicación...');
   
+    try {
+    // Verificar autenticación inicial
+    const isAuthenticated = await ensureAuthenticated({interactive: true});
+    if (!isAuthenticated) {
+      console.log('❌ Usuario no autenticado, redirigiendo...');
+      return;
+    }
+    
+    console.log('✅ Usuario autenticado correctamente');
+    
+    // Configurar verificación periódica (cada 10 minutos en lugar de cada minuto)    
+  } catch (error) {
+    console.error('❌ Error crítico en inicialización:', error);
+    promptAndRedirectToLogin("Error iniciando aplicación. Por favor, inicia sesión nuevamente.");
+    return;
+  }
  
   // Resto de la inicialización...
   localStorage.removeItem('dependentsDraft');
