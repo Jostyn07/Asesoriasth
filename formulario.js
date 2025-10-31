@@ -1792,11 +1792,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupAutoSave();
   console.log('✅ Auto-guardado configurado');
 
-  const addBtn = $("#addDependentsBtn");
-  const editBtn = $("#editDependentsBtn");
-  const closeBtn = $("#closeDependentsModal");
-  const modal = $("#dependentsModal");
-
   const modalBody = modal?.querySelector(".modal-body");
   if (modalBody && !modalBody.querySelector("#addDependent") && !modalBody.querySelector("#saveDependentsBtn")) {
     const actions = document.createElement("div");
@@ -1915,7 +1910,6 @@ async function saveDraft() {
 
   } catch (error) {
     console.error('❌ Error guardando borrador:', error);
-    showStatus('❌ Error crítico: No se pudo guardar el borrador', 'error');
   }
 }
 
