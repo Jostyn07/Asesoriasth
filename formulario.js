@@ -775,7 +775,7 @@ function loadDependentsFromDraft() {
         window.currentDependentsData.forEach((d) => addDependentField(d));
     } else {
         // Asegurar que el contador esté en 0
-        $("#cantidadDependientes").value = "0";
+        $("#cantidadDependientes")?.value = "0";
     }
     
     hideDependentsListIfEmpty();
@@ -1742,9 +1742,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   loadDependentsFromDraft();
-  const addDependentBtn = $("#addDependentFieldBtn");
-  const container = $(DEPENDENTS_CONTAINER_ID);
-  const cantidad = $("#cantidadDependientes");
+  const addDependentBtn = document.getElementById("#addDependentFieldBtn");
+  const container = document.getElementById(DEPENDENTS_CONTAINER_ID);
+  const cantidad = document.getElementById("#cantidadDependientes");
+
+  loadDependentsFromDraft();
 
   if (addDependentBtn) {
     addDependentBtn.addEventListener("click", (e) => {
@@ -1756,16 +1758,42 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (container) {
     container.addEventListener("click", (e) => {
       const btn = e.target.closest(".btn-remove-dependent");
-      if (btn) removeDependentField(btn);
+      if (btn) {
+        e.preventDefault();
+        removeDependentField(btn);
+      }
     });
   }
 
   if (cantidad) {
     cantidad.addEventListener("change", () => {
       const n = Math.max(0, parseInt(cantidad.value || "0, 10") || 0);
-      ensureDependentsCards(n);
+  if (n === 0) {
+        // Eliminar todos los dependientes
+        if (container) container.innerHTML = "";
+        window.currentDependentsData = [];
+        localStorage.removeItem("dependentsDraft");
+        hideDependentsListIfEmpty();
+  } else {
+    const current = window.currentDependentsData.length;
+    if (n > current) {
+      // Agregar dependientes vacíos
+      for (let i = current; i < n; i++) {
+        addDependentField();
+      }
+    } else if (n < current) {
+      // Eliminar los últimos dependientes
+      const items = Array.from(container.querySelectorAll(".dependent-item-formal"));
+      for (let i = current - 1; i >= n; i--) {
+        if (items[i]) items[i].remove();
+      }
+      updateDependentNumbers();
       saveDependentsDraft();
-    });
+    }
+  }
+    updateDependentsCount();
+      
+    }); 
   }
 
   if (container) {
@@ -1907,7 +1935,7 @@ async function sendDraftToSheets(data) {
   if (!data || typeof data !== 'object') {
     throw new Error("El objeto de datos a enviar es nulo o invalido")
   }
-  
+
   try {
     const response = await fetch(`${BACKEND_URL}/api/drafts/save`, { // <-- Llama al nuevo endpoint
       method: "POST",

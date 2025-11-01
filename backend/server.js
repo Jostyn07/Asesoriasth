@@ -7,6 +7,7 @@ dotenv.config();
 
 import { Readable } from 'stream'; 
 import express from 'express';
+import fs from 'fs/promises'
 import { google } from 'googleapis';
 import multer from 'multer';
 import cors from 'cors'; 
@@ -30,26 +31,27 @@ const DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID; // Se lee del entorn
  * almacenadas en la variable de entorno GOOGLE_APPLICATION_CREDENTIALS de Render.
  */
 async function getAuthenticatedClient() {
-// CRÍTICO: 1. Verifica si la variable de entorno existe y 2. Parsea el JSON.
-    const credentialsString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+// 🚩 La variable de entorno ahora es la RUTA al archivo secreto
+    const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
-    if (!credentialsString || credentialsString === 'undefined' || credentialsString.trim() === '') {
-        console.error('❌ CRÍTICO: La variable GOOGLE_APPLICATION_CREDENTIALS no está configurada o está vacía.');
-        // Lanza un error claro que será capturado por los endpoints
-        throw new Error('No se pudieron cargar las credenciales del servicio de Google. Por favor, revisa la variable GOOGLE_SA_CREDENTIALS en Render.');
+    if (!credentialsPath || credentialsPath.trim() === '') {
+        console.error('❌ CRÍTICO: La variable GOOGLE_APPLICATION_CREDENTIALS (Ruta) no está configurada.');
+        throw new Error('No se pudo encontrar la ruta a las credenciales del servicio de Google.');
     }
 
     let credentials;
     try {
-        credentials = JSON.parse(credentialsString); // Intentamos parsear el JSON
+        // 💡 Leemos el CONTENIDO del archivo en la ruta especificada
+        const credentialsString = await fs.readFile(credentialsPath, 'utf8');
+        credentials = JSON.parse(credentialsString); 
     } catch (e) {
-        console.error('❌ CRÍTICO: Error al parsear GOOGLE_APPLICATION_CREDENTIALS como JSON:', e.message);
-        throw new Error('Las credenciales de Google no son un JSON válido.');
+        console.error(`❌ CRÍTICO: Error leyendo o parseando el archivo en ${credentialsPath}:`, e.message);
+        throw new Error('Error al leer el archivo de credenciales de Google o no es un JSON válido. Asegúrate de que el archivo existe y es legible.');
     }
     
     // Si llegamos aquí, las credenciales son válidas
     const authClient = new google.auth.GoogleAuth ({
-        credentials, // Usamos las credenciales JSON del entorno
+        credentials, // Usamos el contenido JSON leído
         scopes: [
             'https://www.googleapis.com/auth/drive',
             'https://www.googleapis.com/auth/spreadsheets'
