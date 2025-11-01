@@ -217,7 +217,7 @@ window.onload = () => {
 
         setTimeout(() => {
 
-            window. location.href = redirectPage;
+            window.location.href = redirectPage;
         }, 1000);
     }
 };
