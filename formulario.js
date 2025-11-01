@@ -537,7 +537,7 @@ function initTabs() {
 
 // ========================== Dependientes ==========================
 window.currentDependentsData = window.currentDependentsData || [];
-const DEPENDENTS_CONTAINER_ID = "#dependentsContainer";
+const DEPENDENTS_CONTAINER_ID = "dependentsContainer";
 const DEPENDENTS_LIST_ID = "#dependentsList";
 // Muestra el contenedor general de los dependes
 function showDependentsList() {
@@ -1325,7 +1325,7 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
       // Si el backend no devolvió link pero sí folderId, construir link estándar de Drive
       if (!folderLink && folderId) folderLink = `https://drive.google.com/drive/folders/${folderId}`;
     
-    createdFolderLink = folderLink || '';
+    let createdFolderLink = folderLink || '';
     if (folderId) window.lastFolderId = folderId; 
     } else {
       // intentar extraer folderId desde el link si es posible
@@ -1742,9 +1742,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   loadDependentsFromDraft();
-  const addDependentBtn = document.getElementById("#addDependentFieldBtn");
+  const addDependentBtn = document.getElementById("addDependentFieldBtn");
   const container = document.getElementById(DEPENDENTS_CONTAINER_ID);
-  const cantidad = document.getElementById("#cantidadDependientes");
+  const cantidad = document.getElementById("cantidadDependientes");
 
   loadDependentsFromDraft();
 
@@ -1767,7 +1767,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (cantidad) {
     cantidad.addEventListener("change", () => {
-      const n = Math.max(0, parseInt(cantidad.value || "0, 10") || 0);
+      const n = Math.max(0, parseInt(cantidad.value || "0", 10) || 0);
   if (n === 0) {
         // Eliminar todos los dependientes
         if (container) container.innerHTML = "";
@@ -1862,7 +1862,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     dataForm.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (e.target.tagName.toLoweCase() === 'textarea') {
+        if (e.target.tagName.toLowerCase() === 'textarea') {
           return;
         }
 
@@ -1870,7 +1870,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const currentElementIndex = formElements.indexOf(e.target);
         const nextElement = formElements[currentElementIndex + 1];
 
-        if (nextElement && nextElement.tagname.toLoweCase() !== 'button') {
+        if (nextElement && nextElement.tagname.toLowerCase() !== 'button') {
           nextElement.focus();
         }
       }
