@@ -1904,7 +1904,10 @@ async function saveDraft() {
 
 async function sendDraftToSheets(data) {
   console.log('📤 Enviando borrador al Backend (Service Account)...');
-
+  if (!data || typeof data !== 'object') {
+    throw new Error("El objeto de datos a enviar es nulo o invalido")
+  }
+  
   try {
     const response = await fetch(`${BACKEND_URL}/api/drafts/save`, { // <-- Llama al nuevo endpoint
       method: "POST",
