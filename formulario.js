@@ -538,7 +538,7 @@ function initTabs() {
 // ========================== Dependientes ==========================
 window.currentDependentsData = window.currentDependentsData || [];
 const DEPENDENTS_CONTAINER_ID = "dependentsContainer";
-const DEPENDENTS_LIST_ID = "#dependentsList";
+const DEPENDENTS_LIST_ID = "dependentsList";
 // Muestra el contenedor general de los dependes
 function showDependentsList() {
   const list = $(DEPENDENTS_LIST_ID)
@@ -553,6 +553,8 @@ function hideDependentsListIfEmpty() {
   if (container && list) {
     if (container.children.length === 0) {
       list.style.display = 'none';
+    } else {
+      list.style.display = 'block';
     }
   }
 }
@@ -1302,6 +1304,7 @@ async function uploadFilesToBackend(files, folderNameFromSheets, clientId = null
 
   let folderId = null;
   let folderLink = existingFolderLink || null;
+  let createdFolderLink = '';
 
   try {
     const folderName = folderNameFromSheets;
@@ -1736,6 +1739,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   attachCurrencyFormatting();
   initUploads();
   initCignaPlans();
+
   const titularFechaNac = $('#fechaNacimiento');
   if( titularFechaNac) {
     attachDateInputMask(titularFechaNac)
@@ -1745,8 +1749,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const addDependentBtn = document.getElementById("addDependentFieldBtn");
   const container = document.getElementById(DEPENDENTS_CONTAINER_ID);
   const cantidad = document.getElementById("cantidadDependientes");
-
-  loadDependentsFromDraft();
 
   if (addDependentBtn) {
     addDependentBtn.addEventListener("click", (e) => {
@@ -1763,8 +1765,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         removeDependentField(btn);
       }
     });
+  
+  // Auto save
+    container.addEventListener('input', (e) => {
+      if (e.target.closest('.dependent-item-formal')) {
+        saveDependentsDraft();
+      }
+    });
   }
-
   if (cantidad) {
     cantidad.addEventListener("change", () => {
       const n = Math.max(0, parseInt(cantidad.value || "0", 10) || 0);
@@ -1776,6 +1784,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         hideDependentsListIfEmpty();
   } else {
     const current = window.currentDependentsData.length;
+
     if (n > current) {
       // Agregar dependientes vacíos
       for (let i = current; i < n; i++) {
@@ -1796,13 +1805,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }); 
   }
 
-  if (container) {
-    container.addEventListener('input', (e) => {
-      if (e.target.closest('.dependent-item-formal')) {
-        saveDependentsDraft();
-      }
-    });
-  }
   // ===== Configurar botones de borrador =====
   const saveDraftBtn = document.getElementById('saveDraftBtn');
   if (saveDraftBtn) {
@@ -1822,46 +1824,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupAutoSave();
   console.log('✅ Auto-guardado configurado');
 
-  if (container) {
-    container.addEventListener("click", (e) => {
-      const btn = e.target.closest(".btn-remove-dependent");
-      if (btn) removeDependentField(btn);
-    });
-  }
-  if (cantidad) {
-    cantidad.addEventListener("change", () => {
-      const n = Math.max(0, parseInt(cantidad.value || "0", 10) || 0);
-      if (n === 0) {
-        // Elimina todos los dependientes del DOM y del draft
-        if (container) container.innerHTML = "";
-        window.currentDependentsData = [];
-        localStorage.removeItem("dependentsDraft");
-      } else {
-        const cur = (window.currentDependentsData || []).length;
-        if (n > cur) {
-          for (let i = cur; i < n; i++)
-            window.currentDependentsData.push({
-              nombre: "",
-              apellido: "",
-              fechaNacimiento: "",
-              parentesco: "",
-              ssn: "",
-              aplica: "",
-              estadoMigratorio: ""
-            });
-        } else if (n < cur) {
-          window.currentDependentsData = window.currentDependentsData.slice(0, n);
-        }
-      }
-    });
-  }
   // Configurar evento del formulario principal
   const dataForm = document.getElementById('dataForm');
   if (dataForm) {
     dataForm.addEventListener('submit', onSubmit);
+
     dataForm.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
+
         if (e.target.tagName.toLowerCase() === 'textarea') {
           return;
         }
@@ -1874,7 +1845,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           nextElement.focus();
         }
       }
-    })
+    });
   } else {
     console.error('❌ No se encontró el formulario con id "dataForm"');
   }
