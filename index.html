@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="logo.png">
+    <title>Login Asesorias S&S</title>
+    <!-- Logo alt text: Circular gold logo with stylized S ampersand S in the center, thin gold border, horizontal gold line and small bar chart below, text S ampersand S TM inside the circle, elegant and professional tone -->
+    <link rel="stylesheet" href="login.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Microsoft MSAL -->
+    <script src="https://alcdn.msauth.net/browser/2.38.1/js/msal-browser.min.js"></script>
+</head>
+
+<body>
+    <form id="loginForm" class="login-container">
+        <div class="login-body">
+            <h1 class="login-title">Iniciar Sesión</h1>
+            <img src="Imagenes/Logo.png" alt="Logo" class="login-logo">
+            <div class="form-login">
+                <div class="login-input-section">
+                    <label for="email"></label>
+                    <input type="email" id="email" name="email" placeholder="Correo">
+                </div>
+                <div class="login-input-section">
+                    <label for="password"></label>
+                    <input type="password" id="password" name="password" placeholder="Contraseña">
+                </div>
+                <button class="btn-login">Ingresar</button>
+            </div>
+        </div>
+    </form>
+    <script src="login.js"></script>
+    <script src="microsoft-auth.js"></script>
+</body>
+<footer>
+    <footer>&copy; 2025 Asesoriasth. Todos los derechos reservados. versión 2.0</footer>
+</footer>
+</html>
