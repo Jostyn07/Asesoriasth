@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asesorias S&S</title>
+
+    <link rel="icon" type="image/x-icon" href="logo.png">
+    <link rel="stylesheet" href="formulario.css">
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <div>
+    <h2>¡Bienvenido!, <span id="userName"></span>.</h2>
+</div>
+    <div class="container">
+        <header class="main-header">
+            <img src="Imagenes/Logo.png" alt="Logo de Ase sorias S&S" class="logo-img">
+        </header>
+    </div>
+
+        <h2 class="main-title">Registro de pólizas de clientes</h2>
+        <div class="form-container">
+
+            <form id="dataForm">
+                <nav class="tabs-nav">
+                    <button type="button" class="tab-button active" data-tab="obamacare">Obamacare</button>
+                    <button type="button" class="tab-button" data-tab="cignaComplementario">Cigna complementario</button>
+                    <button type="button" class="tab-button" data-tab="pagos">Pagos</button>
+                    <button type="button" class="tab-button" data-tab="documentos">Documentos y Audio</button>
+                </nav>
+
+                <div class="tab-content active" id="tab-obamacare">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Datos personales</h2>
+                        </div>
+                        <div class="card-body form-grid">
+                            <div class="grid-item">
+                                <label for="fechaRegistro" class="form-label">Fecha de registro:</label>
+                                <input type="date" id="fechaRegistro" name="fechaRegistro" class="form-control" placeholder="Fecha de registro" required>
+                            </div>
+                            <div class="grid-item">
+                                <label for="Nombres" class="form-label">Nombres:</label>
+                                <input type="text" id="Nombre" name="Nombre" class="form-control" placeholder="Nombres del titular" required>
+                            </div>
+                            <div class="grid-item">
+                                <label for="Apellidos" class="form-label">Apellidos:</label>
+                                <input type="text" id="Apellidos" name="Apellidos" class="form-control" placeholder="Apellidos del titular" required>
+                            </div>
+                            <div class="grid-item">
+                                <label for="sexo" class="form-label">Sexo</label>
+                                <select name="sexo" id="sexo" class="form-select" title="Sexo">
+                                    <option value="">Selecciona...</option>
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Femenino">Femenino</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <div class="grid-item">
+                                <label for="correo" class="form-label">Correo electrónico:</label>
+                                <input type="email" id="correo" name="correo" class="form-control" placeholder="Correo electrónico del titular">
+                            </div>
+                            <div class="grid-item">
+                                <label for="telefono" class="form-label">Teléfono:</label>
+                                <input type="tel" id="telefono" name="telefono" class="form-control" placeholder="Teléfono del titular">
+                            </div>
+                            <div class="grid-item">
+                                <label for="telefono2" class="form-label">Teléfono 2:</label>
+                                <input type="tel" id="telefono2" name="telefono2" class="form-control" placeholder="Teléfono 2">
+                            </div>
+                            <div class="grid-item">
+                                <label for="fechaNacimiento" class="form-label">Fecha de nacimiento:</label>
+                                <input type="text" id="fechaNacimiento" name="fechaNacimiento" class="form-control" placeholder="mm/dd/aaaa" required>
+                            </div>
+                            <div class="grid-item">
+                                <label for="estadoMigratorio" class="form-label">Estado migratorio:</label>
+                                <select name="estadoMigratorio" id="estadoMigratorio" class="form-select">
+                                    <option value="">Selecciona...</option>
+                                    <option value="Ciudadano">Ciudadano</option>
+                                    <option value="Residente Permanente">Residente Permanente</option>
+                                    <option value="Permiso de trabajo">Permiso de trabajo</option>
+                                    <option value="Asilo politico">Asilo politico</option>
+                                    <option value="I-94">I-94</option>
+                                    <option value="Otro">Otro</option>
+                                </select>  
+                            </div>
+                            <div class="grid-item">
+                                <label for="SSN" class="form-label">SSN:</label>
+                                <input type="text" id="SSN" name="SSN" class="form-control" placeholder="Número de Seguro Social" maxlength="11" minlength="11">
+                            </div>
+                            <div class="grid-item">
+                                <label for="ingresos" class="form-label">Ingresos:</label>
+                                <input type="text" id="ingresos" name="ingresos" class="form-control" placeholder="Ingresos del titular" min="0" value="0">
+                            </div>
+                            <div class="grid-item">
+                                <label for="ocupación" class="form-label">Ocupación:</label>
+                                <input type="text" id="ocupación" name="ocupación" class="form-control" placeholder="Ocupación del titular">
+                            </div>
+                            <div class="grid-item">
+                                <label for="nacionalidad" class="form-label">Nacionalidad:</label>
+                                <input type="text" id="nacionalidad" name="nacionalidad" class="form-control" placeholder="Nacionalidad del titular" minlength="4" required>
+                            </div>
+                            <div class="grid-item">
+                                <label for="Aplica?" class="form-label"> Aplica?</label>
+                                    <select name="aplica" id="aplica" class="form-select" title="¿Aplica?">
+                                        <option value="">Selecciona...</option>
+                                        <option value="Si">Sí</option>
+                                        <option value="No">No</option>
+                                    </select>
+                            </div>
+                            <div class="grid-item full-width">
+                                <label for="cantidadDependientes" class="form-label">Cantidad dependientes:</label>
+                                <input type="number" id="cantidadDependientes" name="cantidadDependientes" class="form-control" placeholder="Cantidad de dependientes" min="0" step="1" value="0">
+                            </div>
+                            <div class="grid-item full-width button-dependent-section">
+                                <button type="button" id="addDependentsBtn" class="btn btn-primary">Agregar dependiente</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contenedor inline para dependientes -->
+                    <div class="card" id="dependentsInlineContainer" style="display: none;">
+                        <div class="card-header">
+                            <h2>Dependientes</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="dependentsContainer"></div>
+                            <div class="grid-item full-width button-dependent-section" style="margin-top: 20px;">
+                                <button type="button" id="addAnotherDependent" class="btn btn-primary">Añadir otro dependiente</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Dirección</h2>
+                        </div>
+                        <div class="card-body form-grid">
+                            <div class="grid-item">
+                                <label for="direccion">Dirección:</label>
+                                <input type="text" id="direccion" name="direccion" class="form-control" placeholder="Dirección del titular">
+                            </div>
+                            <div class="grid-item">
+                                <label for="casaApartamento">Casa/Apartamento:</label>
+                                <input type="text" id="casaApartamento" name="casaApartamento" class="form-control" placeholder="Casa/Apartamento del titular">
+                            </div>
+                            <div class="grid-item">
+                                <label for="condado">Condado:</label>
+                                <input type="text" id="condado" name="condado" class="form-control" placeholder="Condado del titular">
+                            </div>
+                            <div class="grid-item">
+                                <label for="Ciudad">Ciudad:</label>
+                                <input type="text" id="Ciudad" name="Ciudad" class="form-control" placeholder="Ciudad del titular">
+                            </div>
+                            <div class="grid-item">
+                                <label for="estado">Estado:</label>
+                                <select name="estado" id="estado" class="form-select">
+                                    <option value="">Selecciona...</option>
+                                    <option value="AL">Alabama (AL)</option>
+                                    <option value="AZ">Arizona (AZ)</option>
+                                    <option value="FL">Florida (FL)</option>
+                                    <option value="GA">Georgia (GA)</option>
+                                    <option value="IL">Illinois (IL)</option>
+                                    <option value="IN">Indiana (IN)</option>
+                                    <option value="KS">Kansas (KS)</option>
+                                    <option value="LA">Louisiana (LA)</option>
+                                    <option value="MI">Michigan (MI)</option>
+                                    <option value="MO">Missouri (MO)</option>
+                                    <option value="MS">Mississippi (MS)</option>
+                                    <option value="MS">Maryland (MD)</option>
+                                    <option value="NC">North Carolina (NC)</option>
+                                    <option value="NJ">New Jersey (NJ)</option>
+                                    <option value="OH">Ohio (OH)</option>
+                                    <option value="OK">Oklahoma (OK)</option>
+                                    <option value="OK">Pensilvania (PA)</option>
+                                    <option value="SC">Carolina del Sur (SC)</option>
+                                    <option value="TN">Tennessee (TN)</option>
+                                    <option value="TX">Texas (TX)</option>
+                                    <option value="UT">Utah (UT)</option>
+                                    <option value="VA">Virginia (VA)</option>
+                                </select>
+                            </div>
+                            <div class="grid-item">
+                                <label for="codigoPostal">Código Postal:</label>
+                                <input type="text" id="codigoPostal" name="codigoPostal" class="form-control" placeholder="Código Postal del titular">
+                            </div>
+                            <div class="grid-item">
+                                <label class="form-label">
+                                <input type="checkbox" id="poBoxcheck" class="form-control">¿Tiene PO Box?
+                                </label>
+                            </div>
+                            <div class="grid-item">
+                                <input type="text" id="poBox" name="poBox" class="form-control" placeholder="PO Box" disabled>
+                            </div>
+                        </div>
+                     </div>
+
+                     <div class="card">
+                        <div class="card-header">
+                            <h2>Información de la Póliza</h2>
+                        </div>
+                        <div class="card-body form-grid">
+                            <div class="grid-item">
+                                <label for="compania" class="form-label">Compañía Aseguradora:</label>
+                                <select id="compania" name="compania" class="form-select">
+                                    <option value="">Selecciona...</option>
+                                    <option value="Aetna">Aetna</option>
+                                    <option value="Ambetter">Ambetter</option>
+                                    <option value="Ameri HealthCaritas Next">Ameri HealthCaritas Next</option>
+                                    <option value="Athem">Athem</option>
+                                    <option value="Baylor">Baylor</option>
+                                    <option value="Blue Cross and Blue Shield">Blue Cross and Blue Shield</option>
+                                    <option value="CareSource">CareSource</option>
+                                    <option value="Christus Health Plan">Christus Health Plan</option>
+                                    <option value="Cigna">Cigna</option>
+                                    <option value="Community Health Choice">Community Health Choice</option>
+                                    <option value="Florida Blue">Florida Blue</option>
+                                    <option value="Health Firts">Health Firts</option>
+                                    <option value="Imperial Insurance">Imperial Insurance</option>
+                                    <option value="Molina">Molina</option>
+                                    <option value="Oscar">Oscar</option>
+                                    <option value="United HealthCare">United HealthCare</option>
+                                    <option value="WellPoint">WellPoint</option>
+                                </select>
+                            </div>
+                            <div class="grid-item">
+                                <label for="plan" class="form-label">Plan:</label>
+                                <input type="text" id="plan" name="plan" class="form-control" placeholder="Plan de la póliza">
+                            </div>
+                            <div class="grid-item">
+                                <label for="prima" class="form-label">Prima:</label>
+                                <input type="text" id="prima" name="prima" class="form-control" placeholder="Prima de la póliza">
+                            </div>
+                            <div class="grid-item">
+                                <label for="creditoFiscal" class="form-label">Crédito Fiscal:</label>
+                                <input type="text" id="creditoFiscal" name="creditoFiscal" class="form-control" placeholder="Crédito Fiscal">
+                            </div>
+                            <div class="grid-item">
+                                <label for="link" class="form-label">Enlace de la Póliza:</label>
+                                <input type="text" id="link" name="link" class="form-control" placeholder="Enlace de la Póliza">
+                            </div>
+                            <div class="grid-item">
+                                <label for="tipoVenta" class="form-label">Tipo de venta:</label>
+                                <select name="tipoVenta" id="tipoVenta" class="form-select">
+                                    <option value="">Selecciona...</option>
+                                    <option value="Renovada">Renovada</option>
+                                    <option value="Organica">Organica</option>
+                                    <option value="Nueva con registro">Nueva con registro</option>
+                                    <option value="Recuperada">Recuperada</option>
+                                    <option value="Cambio de vida">Cambio de vida</option>
+                                    <option value="Nueva renovada">Nueva renovada</option>
+                                </select>
+                            </div>
+                            <div class="grid-item">
+                                <label for="operador" class="form-label">Operador:</label>
+                                <select name="operador" id="operador" class="form-select">
+                                    <option value="">Selecciona...</option>
+                                    <option value="Ana Pedroza">Ana Pedroza</option>
+                                    <option value="Annerys Rosendo">Annerys Rosendo</option>
+                                    <option value="Anthonis Vanegas">Anthonis Vanegas</option>
+                                    <option value="Auditoría">Auditoría</option>
+                                    <option value="Brandon Perales">Brandon Perales</option>
+                                    <option value="Carlos Arrieta">Carlos Arrieta</option>
+                                    <option value="Cindy Mendoza">Cindy Mendoza</option>
+                                    <option value="Daniel Orellano">Daniel Orellano</option>
+                                    <option value="Daniel Velandia">Daniel Velandia</option>
+                                    <option value="Daniela Severiche">Daniela Severiche</option>
+                                    <option value="Dayana Peñate">Dayana Peñate</option>
+                                    <option value="Deysi Duque">Deysi Duque</option>
+                                    <option value="Edgar Sanchez">Edgar Sanchez</option>
+                                    <option value="Eduardo Liva">Eduardo Liva</option>
+                                    <option value="Elaine Sanchez">Elaine Sanchez</option>
+                                    <option value="Eliana Mont">Eliana Mont</option>
+                                    <option value="Erica De Oro">Erica De Oro</option>
+                                    <option value="Francheska Peralta">Francheska Peralta</option>
+                                    <option value="Lean Barrios">Lean Barrios</option>
+                                    <option value="Heiner Ospino">Heiner Ospino</option>
+                                    <option value="Isacar Gonzalez">Isacar Gonzalez</option>
+                                    <option value="Javier Rua">Javier Rua</option>
+                                    <option value="Josuad Aragón">Josuad Aragón</option>
+                                    <option value="Juan Ospino">Juan Ospino</option>
+                                    <option value="Kevin Marino">Kevin Marino</option>
+                                    <option value="Laura Restrepo">Laura Restrepo</option>
+                                    <option value="Leidy Jimenez">Leidy Jimenez</option>
+                                    <option value="Libia De la Hoz">Libia De la Hoz</option>
+                                    <option value="Ligimart Agrinzones">Ligimart Agrizones</option>
+                                    <option value="Lisney Monsalvo">Lisney Monsalvo</option>
+                                    <option value="Lizeth Escorcia">Lizeth Escorcia</option>
+                                    <option value="Loraine Ahumada">Loraine Ahumada</option>
+                                    <option value="Luis Rizo">Luis Rizo</option>
+                                    <option value="Luisa Narvaez">Luisa Narvaez</option>
+                                    <option value="Madeleidys Solano">Madeleidys Solano</option>
+                                    <option value="Melissa Diaz">Melissa Diaz</option>
+                                    <option value="Michell Andrea">Michell Andrea</option>
+                                    <option value="Moises Prenk">Moises Prenk</option>
+                                    <option value="Natalia Barcelo">Natalia Barcelo</option>
+                                    <option value="Natasha Bocanegra">Natasha Bocanegra</option>
+                                    <option value="Nicolle Carvajalino">Nicolle Carvajalino</option>}
+                                    <option value="Sebastian Acosta">Sebastian Acosta</option>
+                                    <option value="Steffy Fontanilla">Steffy Fontanilla</option>
+                                    <option value="Moises Prenk">Moises Prenk</option>
+                                    <option value="Vivian Berdugo">Vivian Berdugo</option>
+                                    <option value="Xilenys Celin">Xilenys Celin</option>
+                                    <option value="Yendy Gutierrez">Yendy Gutierrez</option>
+                                    <option value="Yunelys Bermudez">Yunelys Bermudez</option>
+                                    
+                                </select>
+                           </div>
+                           <div class="grid-item">
+                                <label for="claveSeguridad" class="form-label">Clave de Seguridad:</label>
+                                <input type="text" id="claveSeguridad" name="claveSeguridad" class="form-control" placeholder="Clave de Seguridad">
+                           </div>
+                            <div class="grid-item">
+                                <label for="observaciones" class="form-label">Observaciones:</label>
+                                <textarea id="observaciones" name="observaciones" class="form-control" placeholder="Observaciones"></textarea>
+                            </div>
+                        </div>
+                     </div>
+                     <div class="siguiente">
+                        <button type="button" class="btn btn-siguiente" id="btnSiguientePagos">Siguiente</button>
+                     </div>
+                </div>
+
+                <div class="tab-content" id="tab-cignaComplementario">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Información cigna complementario</h2>
+                        </div>
+                        <div class="card-body">
+                            <button type="button" class="btn btn-success" id="addCignaPlanBtn">Agregar plan</button>
+                        </div>
+
+                        <div id="cignaFieldsContainer">
+                            <div id="cignaPlanContainer">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="tab-pagos">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Metodo de pago</h2>
+                            <button type="button" id="clearPaymentBtn" class="btn btn-danger" style="position: absolute; right: 10px; top: 10px">Limpiar</button>
+                        </div>
+                        <div class="card-body form-grid">
+                            <div class="grid-item full-width">
+                                <label class="form-select">Selecciona un método de pago</label>
+                                <input type="radio" id="pagoBanco" name="metodoPago" value="banco">
+                                <label for="pagoBanco" class="form-label">Cuenta de banco</label>
+                                <input type="radio" id="pagoTarjeta" name="metodoPago" value="tarjeta">
+                                <label for="pagoTarjeta" class="form-label">Tarjeta</label>
+                            </div>
+                            <div id="pagoBancoContainer" class="grid-item full-width">
+                                <h3>Datos de Cuenta de Banco</h3>
+                                <div class="form-grid">
+                                    <div class="grid-item">
+                                        <label for="numCuenta" class="form-label">Número de Cuenta:</label>
+                                        <input type="text" id="numCuenta" name="numCuenta" class="form-control" placeholder="Número de cuenta bancaria">
+                                    </div>
+                                    <div class="grid-item">
+                                        <label for="numRuta" class="form-label">Número de Ruta:</label>
+                                        <input type="text" id="numRuta" name="numRuta" class="form-control" placeholder="Número de ruta bancaria">
+                                    </div>
+                                    <div class="grid-item">
+                                        <label for="nombreBanco" class="form-label">Nombre del Banco:</label>
+                                        <input type="text" id="nombreBanco" name="nombreBanco" class="form-control" placeholder="Nombre del banco">
+                                    </div>
+                                    <div class="grid-item">
+                                        <label for="titularCuenta" class="form-label">Titular de la Cuenta:</label>
+                                        <input type="text" id="titularCuenta" name="titularCuenta" class="form-control" placeholder="Nombre del titular de la cuenta">
+                                    </div>
+                                    <div class="grid-item">
+                                        <label for="socialCuenta" class="form-label">Número Social (Cuenta):</label>
+                                        <input type="text" id="socialCuenta" name="socialCuenta" class="form-control" placeholder="SSN del titular de la cuenta" maxlength="11">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="pagoTarjetaContainer" class="grid-item full-width">
+                                <h3>Datos de Tarjeta</h3>
+                                <div class="form-grid">
+                                    <div class="grid-item">
+                                        <label for="numTarjeta" class="form-label">Número de Tarjeta:</label>
+                                        <input type="text" id="numTarjeta" name="numTarjeta" class="form-control" placeholder="XXXX XXXX XXXX XXXX" maxlength="20">
+                                    </div>
+                                    <div class="grid-item">
+                                        <label for="fechaVencimiento" class="form-label">Fecha de Vencimiento:</label>
+                                        <input type="text" id="fechaVencimiento" name="fechaVencimiento" class="form-control" placeholder="MM/AA" maxlength="5" pattern="\d{2}/\d{2}">
+                                    </div>
+                                    <div class="grid-item">
+                                        <label for="cvc" class="form-label">CVC/CVV:</label>
+                                        <input type="text" id="cvc" name="cvc" class="form-control" placeholder="XXX" maxlength="4" pattern="\d{3}">
+                                    </div>
+                                    <div class="grid-item full-width">
+                                        <label for="titularTarjeta" class="form-label">Nombre del Titular de la Tarjeta:</label>
+                                        <input type="text" id="titularTarjeta" name="titularTarjeta" class="form-control" placeholder="Nombre completo del titular">
+                                    </div>
+                                    <div class="grid-item">
+                                        <label for="observaciones" class="form-label">Observaciones:</label>
+                                        <textarea id="pagoObservacionesTarjeta" name="pagoObservacionesTarjeta" class="form-control" rows="4" placeholder="Escribe tus observaciones aquí..."></textarea>
+                                    </div>
+                                </div>
+                            </div>                            
+                        </div>
+                    </div>
+                    <div class="siguiente">
+                        <button type="button" class="btn btn-siguiente" id="btnSiguienteDocumentos">Siguiente</button>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="tab-documentos">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Documentos y Audio</h2>
+                        </div>
+                        <div class="card-body form-grid" id="customUploadContainer">
+                            <div class="grid-item full-width">
+                                <button type="button" class="btn btn-primary" id="addUploadFieldBtn">Agregar archivo</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-action">
+                        <button type="submit" id="submitBtn" class="btn btn-primary">Enviar datos</button>
+                        <div class="draft-controls">
+                            <button type="button" id="saveDraftBtn" class="btn btn-secondary">
+                                💾 Guardar borrador
+                            </button>
+                            <button type="button" id="draftMenuBtn" class="btn btn-outline-secondary" onclick="toggleDraftMenu()" title="Opciones de borrador">
+                                ▼
+                            </button>
+                            <div id="draftMenu" class="draft-menu" style="display: none;">
+                                <button type="button" onclick="loadDraft()" class="draft-menu-item">
+                                    📂 Cargar borrador
+                                </button>
+                                <button type="button" onclick="deleteDraft()" class="draft-menu-item">
+                                    🗑️ Eliminar borrador
+                                </button>
+                                <button type="button" onclick="clearDraft()" class="draft-menu-item">
+                                    ❌ Limpiar formulario
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </form>
+        </div>
+    <!-- Mensaje de estado flotante -->
+    <div id="statusMessage" class="status-message" style="display: none;"></div>
+
+    <script type="module" src="formulario.js"></script>
+</body>
+<footer>
+    <p>&copy; 2025 Asesoriasth. Todos los derechos reservados. versión 1.5</p>
+</footer>
+</html>
