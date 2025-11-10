@@ -796,6 +796,8 @@ function setupDependentValidation(card) {
       el.classList.toggle("valid", !!el.value.trim());
     });
   });
+  
+  // Formateo de SSN
   const ssn = card.querySelector(".dependent-ssn");
   if (ssn) {
     ssn.addEventListener("input", (e) => {
@@ -803,6 +805,33 @@ function setupDependentValidation(card) {
       if (v.length <= 3) e.target.value = v;
       else if (v.length <= 5) e.target.value = `${v.slice(0, 3)}-${v.slice(3)}`;
       else e.target.value = `${v.slice(0, 3)}-${v.slice(3, 5)}-${v.slice(5)}`;
+    });
+  }
+  
+  // Formateo de fecha MM/DD/AAAA
+  const fechaInput = card.querySelector(".dependent-fecha");
+  if (fechaInput) {
+    fechaInput.addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      let formattedValue = '';
+      if (value.length > 0) {
+        formattedValue = value.substring(0, 2);
+        if (value.length > 2) {
+          formattedValue += '/' + value.substring(2, 4);
+        }
+        if (value.length > 4) {
+          formattedValue += '/' + value.substring(4, 8);
+        }
+      }
+      e.target.value = formattedValue;
+    });
+    
+    fechaInput.addEventListener('blur', function(e) {
+      const value = e.target.value.replace(/\D/g, '');
+      if (value.length > 0 && value.length !== 8) {
+        e.target.value = '';
+        showStatus("Formato de fecha incorrecto. Use MM/DD/AAAA.", 'error');
+      }
     });
   }
 }
