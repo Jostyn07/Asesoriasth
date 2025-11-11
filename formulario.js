@@ -981,6 +981,74 @@ function attachDateInputMask(selector) {
   });
 }
 
+// Formateo de número de tarjeta (XXXX-XXXX-XXXX-XXXX)
+function attachCardNumberFormatting() {
+  const el = $("#numTarjeta");
+  if (!el) return;
+  
+  el.addEventListener('input', function(e) {
+    // Solo permitir números
+    let value = e.target.value.replace(/\D/g, '');
+    // Limitar a 16 dígitos
+    value = value.substring(0, 16);
+    let formattedValue = '';
+    
+    // Agregar guiones cada 4 dígitos
+    for (let i = 0; i < value.length; i++) {
+      if (i > 0 && i % 4 === 0) {
+        formattedValue += '-';
+      }
+      formattedValue += value[i];
+    }
+    
+    e.target.value = formattedValue;
+  });
+}
+
+// Formateo de fecha de vencimiento (MM/AA)
+function attachCardExpiryFormatting() {
+  const el = $("#fechaVencimiento");
+  if (!el) return;
+  
+  el.addEventListener('input', function(e) {
+    // Solo permitir números
+    let value = e.target.value.replace(/\D/g, '');
+    let formattedValue = '';
+    
+    if (value.length > 0) {
+      // Mes (MM)
+      formattedValue = value.substring(0, 2);
+      if (value.length > 2) {
+        // Agregar slash y año (AA)
+        formattedValue += '/' + value.substring(2, 4);
+      }
+    }
+    
+    e.target.value = formattedValue;
+  });
+  
+  el.addEventListener('blur', function(e) {
+    const value = e.target.value.replace(/\D/g, '');
+    // Validar que tenga 4 dígitos (MMAA)
+    if (value.length > 0 && value.length !== 4) {
+      e.target.value = '';
+      showStatus("Formato de fecha incorrecto. Use MM/AA.", 'error');
+    }
+  });
+}
+
+// Formateo de CVC/CVV (solo números, 3-4 dígitos)
+function attachCVCFormatting() {
+  const el = $("#cvc");
+  if (!el) return;
+  
+  el.addEventListener('input', function(e) {
+    // Solo permitir números, máximo 4 dígitos
+    let value = e.target.value.replace(/\D/g, '');
+    e.target.value = value.substring(0, 4);
+  });
+}
+
 // =================== Documentos y Audio (uploads) ========================
 function initUploads() {
   const addBtn = $("#addUploadFieldBtn");
@@ -1701,6 +1769,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   initUploads();
   initCignaPlans();
   attachDateInputMask('#fechaNacimiento');
+  attachCardNumberFormatting();
+  attachCardExpiryFormatting();
+  attachCVCFormatting();
 
   // ===== Configurar botones de borrador =====
   const saveDraftBtn = document.getElementById('saveDraftBtn');
