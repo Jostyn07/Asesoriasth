@@ -1450,6 +1450,7 @@ async function uploadFilesToBackend(files, folderNameFromSheets) {
     await new Promise(resolve => setTimeout(resolve, 3000));
   }
 }
+
 async function onSubmit(e) {
   e.preventDefault();
   e.stopPropagation();
@@ -1515,7 +1516,6 @@ async function onSubmit(e) {
 
     // Enviar datos del formulario
     showStatus("Enviando datos del formulario...", "info");
-    // const clientId = await sendFormDataToSheets(data); // Se usaba para enviar por el frontend
     const sheetResult = await sendFormDataToSheets(data);
     const clientId = sheetResult.clientId;
     const folderName = sheetResult.folderName;
@@ -1527,15 +1527,16 @@ async function onSubmit(e) {
     
     // Subir archivos si hay
     if (filesToUpload.length > 0) {
-      showStatus("enviando archivos...", "info", );
+      showStatus("enviando archivos...", "info");
       await uploadFilesToBackend(filesToUpload, folderName);
     }
 
-    // Eliminar borrador guardado
-    await clearAllDraftsAfterSubmit(clientId);
+    // ❌ ELIMINADO: Ya no borramos el borrador de Sheets
+    // await clearAllDraftsAfterSubmit(clientId);
 
-    // Resetear formulario
-    resetFormState();
+    // ❌ ELIMINADO: Ya no reseteamos el formulario
+    // resetFormState();
+    
     showStatus("✅ Formulario y archivos procesados exitosamente!", "success");
 
     if (submitBtn) {
@@ -1551,7 +1552,7 @@ async function onSubmit(e) {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Enviar datos';
-      submitBtn.classList.remove('brn-loading');
+      submitBtn.classList.remove('btn-loading');
     }
 
   } finally {
@@ -2377,9 +2378,6 @@ function showDraftInfo() {
     showStatus('❌ Error al mostrar información: ' + error.message, 'error');
   }
 }
-
-// ============ FUNCIONES PARA GUARDAR BORRADOR EN GOOGLE SHEETS (MULTI-USUARIO) ============
-
 /**
  * Genera un ID único basado en los datos del formulario
  * Esto evita conflictos cuando varios usuarios comparten el mismo correo
@@ -2850,6 +2848,12 @@ function setupLoadDraftButton() {
 // ============ MODIFICAR EL ENVÍO DEL FORMULARIO ============
 
 function setupFormSubmitWithDraftCleanup() {
+    // ❌ DESHABILITADO: Ya no eliminamos el borrador al enviar el formulario
+    // El usuario quiere mantener los borradores en Google Sheets
+    console.log('ℹ️ Limpieza automática de borradores al enviar: DESHABILITADA');
+    
+    // Si en el futuro quieres reactivar la eliminación automática, descomenta este código:
+    /*
     const form = document.getElementById('dataForm');
     if (form) {
         form.addEventListener('submit', async function(e) {
@@ -2868,6 +2872,7 @@ function setupFormSubmitWithDraftCleanup() {
             }
         });
     }
+    */
 }
 
 // ============ AUTO-GUARDADO EN SHEETS (DESHABILITADO EN MODO MULTI-USUARIO) ============
