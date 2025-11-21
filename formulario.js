@@ -1363,7 +1363,7 @@ function validateClientData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "https://asesoriasth-backend-88xb.onrender.com"; // Cambia esto a tu URL real
+const BACKEND_URL = "https://asesoriasth-backend-88xb.onrender.com"; // URL base de datos
 
 async function sendFormDataToSheets(data) {
   console.log("Enviando datos al Backend...", data);
@@ -1862,6 +1862,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error('❌ No se encontró el formulario con id "dataForm"');
   }
 
+    
   console.log('✅ Aplicación inicializada correctamente');
 });
 
@@ -2377,6 +2378,531 @@ function showDraftInfo() {
   }
 }
 
+// ============ FUNCIONES PARA GUARDAR BORRADOR EN GOOGLE SHEETS (MULTI-USUARIO) ============
+
+/**
+ * Genera un ID único basado en los datos del formulario
+ * Esto evita conflictos cuando varios usuarios comparten el mismo correo
+ */
+function generateUniqueDraftId(formData) {
+    // Usar nombre + teléfono + fecha como identificador único
+    const nombre = formData.nombre || '';
+    const apellidos = formData.apellidos || '';
+    const telefono = formData.telefono || '';
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).slice(2, 8).toUpperCase();
+    
+    // Crear un ID único que incluya información del cliente
+    const clienteInfo = `${nombre}-${apellidos}-${telefono}`.replace(/\s+/g, '-').substring(0, 30);
+    return `DRAFT-${clienteInfo}-${timestamp}-${random}`;
+}
+
+/**
+ * Guarda el borrador actual en Google Sheets
+ * MODIFICADO: Siempre crea un NUEVO borrador en lugar de actualizar uno existente
+ * @param {boolean} showNotification - Si debe mostrar notificación al usuario
+ * @returns {Promise<object>} - Respuesta del servidor
+ */
+async function saveDraftToSheets(showNotification = true) {
+    try {
+        // Verificar autenticación
+        const authenticated = await ensureAuthenticated({ interactive: false });
+        if (!authenticated) {
+            console.warn('Usuario no autenticado, no se puede guardar en Sheets');
+            return null;
+        }
+
+        // Recolectar todos los datos del formulario
+        const formData = collectData();
+        
+        // Verificar si hay datos para guardar
+        const hasData = Object.values(formData).some(value => 
+            value && value.toString().trim() !== '' && value.toString().trim() !== '0'
+        );
+        
+        if (!hasData) {
+            if (showNotification) {
+                showStatus('ℹ️ No hay datos para guardar', 'info');
+            }
+            return null;
+        }
+
+        // Verificar que al menos tenga nombre O teléfono para identificar el borrador
+        if (!formData.nombre && !formData.telefono) {
+            if (showNotification) {
+                showStatus('⚠️ Por favor ingresa al menos el nombre o teléfono antes de guardar', 'warning');
+            }
+            return null;
+        }
+
+        // IMPORTANTE: Generar un NUEVO ID único basado en los datos del formulario
+        // Esto evita conflictos entre usuarios que comparten el mismo correo
+        const draftId = generateUniqueDraftId(formData);
+
+        // Agregar información adicional al borrador
+        const draftData = {
+            ...formData,
+            draftId: draftId,
+            draftTimestamp: new Date().toISOString(),
+            draftUser: getAuthState().userInfo?.name || 'Usuario Compartido',
+            // Agregar el operador actual para identificar quién creó el borrador
+            operadorBorrador: formData.operador || getAuthState().userInfo?.name || 'Sin operador'
+        };
+
+        // Hacer la petición al backend
+        const response = await fetch(`${BACKEND_URL}/api/save-draft`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(draftData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error del servidor: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        // Guardar el draftId en localStorage para referencia
+        const localDraft = JSON.parse(localStorage.getItem('formDraft') || '{}');
+        localDraft.draftId = result.draftId;
+        localDraft.draftTimestamp = result.timestamp;
+        localStorage.setItem('formDraft', JSON.stringify(localDraft));
+
+        if (showNotification) {
+            showStatus(`✅ Borrador guardado: ${formData.nombre || 'Cliente'} ${formData.apellidos || ''} - ${formData.telefono || ''}`, 'success');
+        }
+        
+        console.log('✅ Borrador guardado en Sheets:', result);
+        return result;
+
+    } catch (error) {
+        console.error('❌ Error al guardar borrador en Sheets:', error);
+        if (showNotification) {
+            showStatus(`⚠️ Error al guardar en Sheets: ${error.message}`, 'error');
+        }
+        return null;
+    }
+}
+
+/**
+ * Lista todos los borradores disponibles en Sheets
+ * NUEVO: Permite ver todos los borradores de todos los usuarios
+ * @returns {Promise<Array>} - Lista de borradores
+ */
+async function listAllDrafts() {
+    try {
+        const authenticated = await ensureAuthenticated({ interactive: false });
+        if (!authenticated) {
+            console.warn('Usuario no autenticado');
+            return [];
+        }
+
+        const response = await fetch(`${BACKEND_URL}/api/list-drafts`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error del servidor: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Borradores cargados:', result);
+        return result.drafts || [];
+
+    } catch (error) {
+        console.error('❌ Error al listar borradores:', error);
+        showStatus(`⚠️ Error al cargar lista de borradores: ${error.message}`, 'error');
+        return [];
+    }
+}
+
+/**
+ * Muestra un modal con todos los borradores disponibles para cargar
+ * NUEVO: Interfaz para seleccionar entre múltiples borradores
+ */
+async function showDraftsSelector() {
+    try {
+        showStatus('📂 Cargando lista de borradores...', 'info');
+        
+        const drafts = await listAllDrafts();
+        
+        if (drafts.length === 0) {
+            showStatus('ℹ️ No hay borradores guardados', 'info');
+            return;
+        }
+
+        // Crear modal con lista de borradores
+        const modal = document.createElement('div');
+        modal.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                z-index: 10001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            " id="draftsModal">
+                <div style="
+                    background: var(--bg-card, #fff);
+                    border-radius: 8px;
+                    padding: 24px;
+                    max-width: 800px;
+                    width: 100%;
+                    max-height: 80vh;
+                    overflow-y: auto;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    color: var(--text-light, #333);
+                ">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">📂 Borradores Guardados (${drafts.length})</h3>
+                        <button onclick="document.getElementById('draftsModal').remove()" 
+                                style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">×</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="draftSearchInput" placeholder="🔍 Buscar por nombre, teléfono o ID..." 
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                    </div>
+                    
+                    <div id="draftsList" style="display: flex; flex-direction: column; gap: 12px;">
+                        ${drafts.map(draft => `
+                            <div class="draft-item" data-search="${draft.nombre} ${draft.apellidos} ${draft.telefono} ${draft.draftId}" 
+                                 style="
+                                border: 1px solid #e0e0e0;
+                                border-radius: 6px;
+                                padding: 16px;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                                background: #f9f9f9;
+                            " 
+                            onmouseover="this.style.background='#e3f2fd'; this.style.borderColor='#2196f3';" 
+                            onmouseout="this.style.background='#f9f9f9'; this.style.borderColor='#e0e0e0';">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <div style="flex: 1;">
+                                        <div style="font-size: 16px; font-weight: 600; color: #1976d2; margin-bottom: 4px;">
+                                            👤 ${draft.nombre || 'Sin nombre'} ${draft.apellidos || ''}
+                                        </div>
+                                        <div style="font-size: 14px; color: #666; margin-bottom: 4px;">
+                                            📞 ${draft.telefono || 'Sin teléfono'} ${draft.correo ? '• 📧 ' + draft.correo : ''}
+                                        </div>
+                                        <div style="font-size: 12px; color: #999;">
+                                            🆔 ${draft.draftId}
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 12px; color: #666;">
+                                            📅 ${draft.timestamp || 'Fecha desconocida'}
+                                        </div>
+                                        <div style="font-size: 12px; color: #999; margin-top: 4px;">
+                                            👨‍💼 ${draft.operadorBorrador || draft.operador || 'Sin operador'}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0;">
+                                    <button onclick="event.stopPropagation(); loadDraftFromSheets('${draft.draftId}'); document.getElementById('draftsModal').remove();" 
+                                            style="flex: 1; background: #2196f3; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                                        📂 Cargar
+                                    </button>
+                                    <button onclick="event.stopPropagation(); if(confirm('¿Eliminar este borrador?')) { deleteDraftFromSheets('${draft.draftId}').then(() => { this.closest('.draft-item').remove(); }); }" 
+                                            style="background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button onclick="document.getElementById('draftsModal').remove()" 
+                                style="background: #9e9e9e; color: white; border: none; padding: 10px 24px; border-radius: 4px; cursor: pointer;">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Agregar funcionalidad de búsqueda
+        const searchInput = document.getElementById('draftSearchInput');
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const items = document.querySelectorAll('.draft-item');
+            
+            items.forEach(item => {
+                const searchData = item.getAttribute('data-search').toLowerCase();
+                if (searchData.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error('Error mostrando selector de borradores:', error);
+        showStatus('❌ Error al mostrar borradores: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Carga un borrador desde Google Sheets
+ * @param {string} draftId - ID del borrador a cargar
+ * @returns {Promise<object>} - Datos del borrador
+ */
+async function loadDraftFromSheets(draftId) {
+    try {
+        const authenticated = await ensureAuthenticated({ interactive: false });
+        if (!authenticated) {
+            console.warn('Usuario no autenticado');
+            return null;
+        }
+
+        showStatus('📂 Cargando borrador...', 'info');
+
+        const response = await fetch(`${BACKEND_URL}/api/load-draft/${draftId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                showStatus('ℹ️ No se encontró el borrador', 'info');
+                return null;
+            }
+            throw new Error(`Error del servidor: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        // Cargar los datos en el formulario
+        if (result.data) {
+            // Usar la función loadDraft existente para poblar el formulario
+            localStorage.setItem('formDraft', JSON.stringify(result.data));
+            loadDraft(); // Función existente que carga desde localStorage
+            
+            showStatus('✅ Borrador cargado exitosamente', 'success');
+        }
+        
+        console.log('✅ Borrador cargado desde Sheets:', result);
+        return result.data;
+
+    } catch (error) {
+        console.error('❌ Error al cargar borrador desde Sheets:', error);
+        showStatus(`⚠️ Error al cargar desde Sheets: ${error.message}`, 'error');
+        return null;
+    }
+}
+
+/**
+ * Elimina un borrador de Google Sheets
+ * @param {string} draftId - ID del borrador a eliminar
+ * @returns {Promise<boolean>} - true si se eliminó correctamente
+ */
+async function deleteDraftFromSheets(draftId) {
+    try {
+        const authenticated = await ensureAuthenticated({ interactive: false });
+        if (!authenticated) {
+            console.warn('Usuario no autenticado');
+            return false;
+        }
+
+        const response = await fetch(`${BACKEND_URL}/api/delete-draft/${draftId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.log('ℹ️ Borrador no encontrado en Sheets');
+                showStatus('ℹ️ Borrador no encontrado', 'info');
+                return true;
+            }
+            throw new Error(`Error del servidor: ${response.status}`);
+        }
+
+        showStatus('✅ Borrador eliminado de Sheets', 'success');
+        console.log('✅ Borrador eliminado de Sheets');
+        return true;
+
+    } catch (error) {
+        console.error('❌ Error al eliminar borrador de Sheets:', error);
+        showStatus(`⚠️ Error al eliminar: ${error.message}`, 'error');
+        return false;
+    }
+}
+
+// ============ MODIFICAR LOS BOTONES "SIGUIENTE" ============
+
+/**
+ * Maneja el clic en cualquier botón "Siguiente"
+ * MODIFICADO: Siempre crea un nuevo borrador
+ */
+async function handleSiguienteClick(event) {
+    const button = event.target;
+    const originalText = button.textContent;
+    
+    try {
+        button.textContent = '💾 Guardando...';
+        button.disabled = true;
+
+        // 1. Guardar en localStorage (función existente)
+        saveDraft();
+
+        // 2. Guardar en Google Sheets (crea NUEVO borrador)
+        await saveDraftToSheets(true);
+
+        button.textContent = originalText;
+        button.disabled = false;
+
+        // Indicador visual de éxito
+        button.style.backgroundColor = '#4CAF50';
+        setTimeout(() => {
+            button.style.backgroundColor = '';
+        }, 1000);
+
+    } catch (error) {
+        console.error('Error en handleSiguienteClick:', error);
+        button.textContent = originalText;
+        button.disabled = false;
+        showStatus('⚠️ Error al guardar borrador', 'error');
+    }
+}
+
+// ============ INICIALIZACIÓN: CONECTAR BOTONES "SIGUIENTE" ============
+
+function setupSiguienteButtons() {
+    const btnSiguienteCigna = document.getElementById('btnSiguienteCigna');
+    if (btnSiguienteCigna) {
+        btnSiguienteCigna.addEventListener('click', handleSiguienteClick);
+    }
+
+    const btnSiguientePagos = document.getElementById('btnSiguientePagos');
+    if (btnSiguientePagos) {
+        btnSiguientePagos.addEventListener('click', handleSiguienteClick);
+    }
+
+    const btnSiguienteDocumentos = document.getElementById('btnSiguienteDocumentos');
+    if (btnSiguienteDocumentos) {
+        btnSiguienteDocumentos.addEventListener('click', handleSiguienteClick);
+    }
+
+    console.log('✅ Botones "Siguiente" configurados (modo multi-usuario)');
+}
+
+// ============ MODIFICAR LA FUNCIÓN DE GUARDADO MANUAL ============
+
+function setupManualDraftButton() {
+    const saveDraftBtn = document.getElementById('saveDraftBtn');
+    if (saveDraftBtn) {
+        const newSaveDraftBtn = saveDraftBtn.cloneNode(true);
+        saveDraftBtn.parentNode.replaceChild(newSaveDraftBtn, saveDraftBtn);
+
+        newSaveDraftBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const originalText = newSaveDraftBtn.textContent;
+            newSaveDraftBtn.textContent = '💾 Guardando...';
+            newSaveDraftBtn.disabled = true;
+
+            try {
+                saveDraft();
+                await saveDraftToSheets(true);
+            } catch (error) {
+                console.error('Error guardando borrador:', error);
+                showStatus('❌ Error al guardar borrador', 'error');
+            } finally {
+                newSaveDraftBtn.textContent = originalText;
+                newSaveDraftBtn.disabled = false;
+            }
+        });
+    }
+}
+
+// ============ MODIFICAR BOTÓN DE CARGAR BORRADOR ============
+
+function setupLoadDraftButton() {
+    // Modificar el comportamiento del botón/menú de cargar borrador
+    const originalLoadDraft = window.loadDraft;
+    
+    window.loadDraft = function() {
+        // Mostrar selector de borradores en lugar de cargar directamente
+        showDraftsSelector();
+    };
+}
+
+// ============ MODIFICAR EL ENVÍO DEL FORMULARIO ============
+
+function setupFormSubmitWithDraftCleanup() {
+    const form = document.getElementById('dataForm');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            const localDraft = localStorage.getItem('formDraft');
+            if (localDraft) {
+                try {
+                    const draftData = JSON.parse(localDraft);
+                    if (draftData.draftId) {
+                        deleteDraftFromSheets(draftData.draftId).catch(err => {
+                            console.warn('No se pudo eliminar el borrador de Sheets:', err);
+                        });
+                    }
+                } catch (error) {
+                    console.warn('Error al procesar borrador para eliminación:', error);
+                }
+            }
+        });
+    }
+}
+
+// ============ AUTO-GUARDADO EN SHEETS (DESHABILITADO EN MODO MULTI-USUARIO) ============
+
+function setupAutoSaveToSheets() {
+    // En modo multi-usuario, NO usamos auto-guardado automático
+    // Solo guardamos cuando el usuario hace click explícitamente
+    console.log('ℹ️ Auto-guardado deshabilitado en modo multi-usuario');
+    console.log('💡 Los borradores se guardan al hacer click en "Siguiente" o "Guardar borrador"');
+}
+
+// ============ INICIALIZACIÓN COMPLETA ============
+
+function initDraftToSheets() {
+    console.log('🚀 Inicializando guardado de borradores en Google Sheets (Modo Multi-Usuario)...');
+    
+    setupSiguienteButtons();
+    setupManualDraftButton();
+    setupLoadDraftButton();
+    setupFormSubmitWithDraftCleanup();
+    setupAutoSaveToSheets();
+    
+    console.log('✅ Sistema de guardado en Sheets inicializado (Multi-Usuario)');
+    console.log('💡 Cada "Siguiente" crea un nuevo borrador con ID único');
+    console.log('💡 Usa el selector de borradores para cargar borradores específicos');
+}
+
+// ============ EJECUTAR AL CARGAR LA PÁGINA ============
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDraftToSheets);
+} else {
+    initDraftToSheets();
+}
+
 // Auto-guardado cada 2 minutos
 function setupAutoSave() {
   let autoSaveInterval;
@@ -2455,5 +2981,12 @@ window.loadDraft = loadDraft;
 window.deleteDraft = deleteDraft;
 window.toggleDraftMenu = toggleDraftMenu;
 window.exportDraft = exportDraft;
+
+window.saveDraftToSheets = saveDraftToSheets;
+window.loadDraftFromSheets = loadDraftFromSheets;
+window.deleteDraftFromSheets = deleteDraftFromSheets;
+window.listAllDrafts = listAllDrafts;
+window.showDraftsSelector = showDraftsSelector;
+window.initDraftToSheets = initDraftToSheets;
 
 window.showDraftInfo = showDraftInfo;
