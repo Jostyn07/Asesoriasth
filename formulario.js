@@ -1845,7 +1845,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     dataForm.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (e.target.tagName.toLoweCase() === 'textarea') {
+        if (e.target.tagName.toLowerCase() === 'textarea') {
           return;
         }
 
@@ -1853,7 +1853,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const currentElementIndex = formElements.indexOf(e.target);
         const nextElement = formElements[currentElementIndex + 1];
 
-        if (nextElement && nextElement.tagname.toLoweCase() !== 'button') {
+        if (nextElement && nextElement.tagName.toLowerCase() !== 'button') {
           nextElement.focus();
         }
       }
