@@ -1363,7 +1363,7 @@ function validateClientData() {
 }
 
 // =================================== API ===================================
-const BACKEND_URL = "https://asesoriasth-backend-88xb.onrender.com"; // URL base de datos
+const BACKEND_URL = "https://asesoriasth-backend.onrender.com"; // URL base de datos
 
 async function sendFormDataToSheets(data) {
   console.log("Enviando datos al Backend...", data);
