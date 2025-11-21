@@ -1531,11 +1531,11 @@ async function onSubmit(e) {
       await uploadFilesToBackend(filesToUpload, folderName);
     }
 
-    // ❌ ELIMINADO: Ya no borramos el borrador de Sheets
+    // ❌ NO borramos el borrador de Google Sheets
     // await clearAllDraftsAfterSubmit(clientId);
 
-    // ❌ ELIMINADO: Ya no reseteamos el formulario
-    // resetFormState();
+    // ✅ SÍ limpiamos el formulario y volvemos a la primera pestaña
+    resetFormState();
     
     showStatus("✅ Formulario y archivos procesados exitosamente!", "success");
 
@@ -1559,6 +1559,7 @@ async function onSubmit(e) {
     showLoaderBar(false);
   }
 }
+
 
 // Funcion para borrar el draft
 async function clearAllDraftsAfterSubmit(clientId) {
